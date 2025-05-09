@@ -59,7 +59,7 @@ Solon 基础插件。为 Solon 提供了一套表达式通用接口。并内置 
 主要特点：
 
 * 总会输出一个结果（“求值”表达式嘛）
-* 通过上下文传递变量，只支持对上下文的变量求值（不支持 new Xxx）
+* 通过上下文传递变量，只支持对上下文的变量求值（不支持 `new Xxx()`）
 * 只能有一条表达式语句（即不能有 `;` 号）
 * 不支持控制运算（即不能有 `if`、`for` 之类的），不能当脚本用。
 * 对象字段、属性、方法调用。可多层嵌套，但只支持 `public`（相对更安全些）
@@ -100,9 +100,10 @@ System.out.println(SnEL.eval("'hello world!'"));
 | 支持二元逻辑操作符     | `AND`, `OR`     |  与，或（兼容 `&&`、`||` ）    |
 | 支持一元逻辑操作符     | `NOT`     |  非（兼容 `!` ）    |
 
-虚拟变量（root）：
+虚拟变量（root）说明：
 
 当使用 StandardContext 上下文时，支持 `root` 虚拟变量（`SnEL.eval("root == true", new StandardContext(true))`）
+
 
 关键字须使用全大写（未来还可能会增多）：
 
@@ -204,9 +205,12 @@ System.out.println(SnEL.eval(expr, context));
 
 
 ```java
-Map<String, Object> context = new HashMap<>();
-context.put("a", 1);
-context.put("b", 1);
+Map<String, Object> data = new HashMap<>();
+data.put("a", 1);
+data.put("b", 1);
+
+StandardContext context = new StandardContext(data);
+context.properties(Solon.cfg()); //绑定应用属性，支持 ${表过式}
 
 SnEL.evalTmpl("sum val is #{a + b},  c prop is ${demo.c:c}");
 ```

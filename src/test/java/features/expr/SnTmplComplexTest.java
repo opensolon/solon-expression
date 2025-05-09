@@ -181,5 +181,6 @@ public class SnTmplComplexTest {
         template = "Info: ${v2}#{1}";
         result = SnEL.evalTmpl(template, context);
         assertEquals("Info: 1", result);
+
     }
 }

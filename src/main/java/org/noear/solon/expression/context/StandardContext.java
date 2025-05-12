@@ -20,7 +20,6 @@ import org.noear.solon.expression.snel.PropertyHolder;
 import org.noear.solon.expression.snel.ReflectionUtil;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
@@ -61,22 +60,34 @@ public class StandardContext implements Function<String, Object> {
         return properties;
     }
 
+    private Object lastValue;
+
     @Override
     public Object apply(String name) {
         if ("root".equals(name)) {
             return target;
         }
 
+        if ("this".equals(name)) {
+            if (lastValue == null) {
+                return target;
+            } else {
+                return lastValue;
+            }
+        }
+
         if (isMap) {
-            return ((Map) target).get(name);
+            lastValue = ((Map) target).get(name);
         } else {
             PropertyHolder tmp = ReflectionUtil.getProperty(target.getClass(), name);
 
             try {
-                return tmp.getValue(target);
+                lastValue = tmp.getValue(target);
             } catch (Throwable e) {
                 throw new EvaluationException("Failed to access property: " + name, e);
             }
         }
+
+        return lastValue;
     }
 }

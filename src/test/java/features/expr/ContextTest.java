@@ -65,6 +65,19 @@ public class ContextTest {
     }
 
 
+    @Test
+    public void case4() {
+        Object result = SnEL.eval("root.substring(1, this.length() - 1)", new StandardContext("abcde"));
+        assert "bcd".equals(result);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("name", "world");
+
+        result = SnEL.eval("name.substring(1, this.length() - 1)", new StandardContext(map));
+        assert "orl".equals(result);
+    }
+
+
     public static class User {
         public String name;
         public int age;

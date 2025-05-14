@@ -17,6 +17,7 @@ package org.noear.solon.expression.snel;
 
 import org.noear.solon.expression.exception.EvaluationException;
 
+import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -67,7 +68,7 @@ public class ReflectionUtil {
                 .orElse(null);
 
         if (method != null) {
-            method.setAccessible(true);
+            accessibleAsTrue(method);
         }
 
         return method;
@@ -110,6 +111,7 @@ public class ReflectionUtil {
     /// //////////////////////////////
     private static final Map<String, PropertyHolder> PROPERTY_CACHE = new ConcurrentHashMap<>();
 
+
     /**
      * 获取属性
      */
@@ -120,13 +122,13 @@ public class ReflectionUtil {
             try {
                 String name = "get" + capitalize(propName);
                 Method method = clazz.getMethod(name);
-                method.setAccessible(true);
+                accessibleAsTrue(method);
 
                 return new PropertyHolder(method, null);
             } catch (NoSuchMethodException e) {
                 try {
                     Field field = clazz.getField(propName);
-                    field.setAccessible(true);
+                    accessibleAsTrue(field);
 
                     return new PropertyHolder(null, field);
                 } catch (NoSuchFieldException ex) {
@@ -143,6 +145,17 @@ public class ReflectionUtil {
         return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 
+
+    /**
+     * 尝试设置访问权限
+     */
+    private static void accessibleAsTrue(AccessibleObject method) {
+        try {
+            method.setAccessible(true);
+        } catch (Throwable ignore) {
+            //略过
+        }
+    }
 
     private static class MethodKey {
         private final Class<?> clazz;

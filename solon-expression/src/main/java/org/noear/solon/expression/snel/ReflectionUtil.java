@@ -151,7 +151,9 @@ public class ReflectionUtil {
      */
     private static void accessibleAsTrue(AccessibleObject method) {
         try {
-            method.setAccessible(true);
+            if (method.isAccessible() == false) {
+                method.setAccessible(true);
+            }
         } catch (Throwable ignore) {
             //略过
         }

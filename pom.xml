@@ -11,21 +11,12 @@
         <relativePath/>
     </parent>
     
-    <artifactId>solon-expression-parent</artifactId>
+    <artifactId>solon-expression-framework</artifactId>
     <name>${project.artifactId}</name>
     <packaging>pom</packaging>
 
-
     <modules>
-        <module>solon-expression</module>
-        <module>solon-expression-to-chroma</module>
-        <module>solon-expression-to-dashvector</module>
-        <module>solon-expression-to-elasticsearch</module>
-        <module>solon-expression-to-milvus</module>
-        <module>solon-expression-to-qdrant</module>
-        <module>solon-expression-to-redis</module>
-        <module>solon-expression-to-tcvectordb</module>
+        <module>__release</module>
     </modules>
-
 
 </project>

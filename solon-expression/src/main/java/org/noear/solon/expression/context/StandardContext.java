@@ -36,8 +36,13 @@ public class StandardContext implements Function<String, Object> {
     private Properties properties;
 
     public StandardContext(Object target) {
+        this(target, null);
+    }
+
+    public StandardContext(Object target, Properties properties) {
         this.target = target;
         this.isMap = target instanceof Map;
+        this.properties = properties;
     }
 
     public StandardContext() {

@@ -27,10 +27,10 @@ import java.util.Collection;
  * @author noear
  * @since 3.1
  */
-public class FilterTransformer implements Transformer<Boolean, String> {
-    private static FilterTransformer instance = new FilterTransformer();
+public class RedisFilterTransformer implements Transformer<Boolean, String> {
+    private static RedisFilterTransformer instance = new RedisFilterTransformer();
 
-    public static FilterTransformer getInstance() {
+    public static RedisFilterTransformer getInstance() {
         return instance;
     }
 

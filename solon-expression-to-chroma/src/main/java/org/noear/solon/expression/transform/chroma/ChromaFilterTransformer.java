@@ -29,10 +29,10 @@ import java.util.Map;
  * @author noear
  * @since 3.1
  */
-public class FilterTransformer implements Transformer<Boolean, Map<String, Object>> {
-    private static FilterTransformer instance = new FilterTransformer();
+public class ChromaFilterTransformer implements Transformer<Boolean, Map<String, Object>> {
+    private static ChromaFilterTransformer instance = new ChromaFilterTransformer();
 
-    public static FilterTransformer getInstance() {
+    public static ChromaFilterTransformer getInstance() {
         return instance;
     }
 

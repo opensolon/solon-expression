@@ -26,10 +26,10 @@ import org.noear.solon.expression.snel.*;
  * @author noear
  * @since 3.1
  */
-public class FilterTransformer implements Transformer<Boolean,Filter> {
-    private static FilterTransformer instance = new FilterTransformer();
+public class TcvectordbFilterTransformer implements Transformer<Boolean,Filter> {
+    private static TcvectordbFilterTransformer instance = new TcvectordbFilterTransformer();
 
-    public static FilterTransformer getInstance() {
+    public static TcvectordbFilterTransformer getInstance() {
         return instance;
     }
 

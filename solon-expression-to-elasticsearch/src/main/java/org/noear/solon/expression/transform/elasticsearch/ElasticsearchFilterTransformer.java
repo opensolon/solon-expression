@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.noear.solon.expression.transform;
+package org.noear.solon.expression.transform.elasticsearch;
 
 import org.noear.solon.expression.Expression;
 import org.noear.solon.expression.Transformer;
@@ -27,10 +27,10 @@ import java.util.*;
  * @author noear
  * @since 3.1
  */
-public class FilterTransformer implements Transformer<Boolean, Map<String, Object>> {
-    private static FilterTransformer instance = new FilterTransformer();
+public class ElasticsearchFilterTransformer implements Transformer<Boolean, Map<String, Object>> {
+    private static ElasticsearchFilterTransformer instance = new ElasticsearchFilterTransformer();
 
-    public static FilterTransformer getInstance() {
+    public static ElasticsearchFilterTransformer getInstance() {
         return instance;
     }
 

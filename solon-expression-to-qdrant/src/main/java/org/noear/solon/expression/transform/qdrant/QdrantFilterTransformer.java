@@ -32,10 +32,10 @@ import java.util.List;
  * @author noear
  * @since 3.1
  */
-public class FilterTransformer implements Transformer<Boolean, Points.Filter> {
-    private static FilterTransformer instance = new FilterTransformer();
+public class QdrantFilterTransformer implements Transformer<Boolean, Points.Filter> {
+    private static QdrantFilterTransformer instance = new QdrantFilterTransformer();
 
-    public static FilterTransformer getInstance() {
+    public static QdrantFilterTransformer getInstance() {
         return instance;
     }
 

@@ -33,29 +33,21 @@ import java.util.function.Function;
 public class StandardContext implements Function<String, Object> {
     private final Object target;
     private final boolean isMap;
-    private Properties properties;
+    private final Properties properties;
 
     public StandardContext(Object target) {
-        this(target, null);
+       this(target, null);
     }
 
     public StandardContext(Object target, Properties properties) {
         this.target = target;
         this.isMap = target instanceof Map;
-        this.properties = properties;
-    }
 
-    public StandardContext() {
-        this.target = Collections.emptyMap();
-        this.isMap = true;
-    }
-
-    /**
-     * 属性设置（用于模板表达式）
-     */
-    public StandardContext properties(Properties properties) {
-        this.properties = properties;
-        return this;
+        if (properties == null && target instanceof Properties) {
+            this.properties = (Properties) target;
+        } else {
+            this.properties = properties;
+        }
     }
 
     /**

@@ -57,16 +57,14 @@ public class TemplateNode implements Expression<String> {
 
     private String getProps(String expr, Function context) {
         //属性，可以传入或者
-        Object props = context.apply(SnEL.CONTEXT_PROPS_KEY);
+        Object props = null;
+
+        if (context instanceof StandardContext) {
+            props = ((StandardContext) context).properties();
+        }
 
         if (props == null) {
-            if (context instanceof StandardContext) {
-                props = ((StandardContext) context).properties();
-            }
-
-            if (props == null) {
-                throw new IllegalArgumentException("Missing property '" + SnEL.CONTEXT_PROPS_KEY + "'");
-            }
+            throw new IllegalArgumentException("Missing property 'properties'");
         }
 
         int colonIdx = expr.lastIndexOf(':');

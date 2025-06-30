@@ -141,11 +141,8 @@ public class SnTmplComplexTest {
         Props props = new Props();
         props.put("v", "1");
 
-        Map<String, Object> context = new HashMap<>();
-        context.put(SnEL.CONTEXT_PROPS_KEY, props);
-
         String template = "Info: ${v}#{1}";
-        String result = SnEL.evalTmpl(template, context);
+        String result = SnEL.evalTmpl(template, new StandardContext(props));
         assertEquals("Info: 11", result);
     }
 
@@ -154,15 +151,12 @@ public class SnTmplComplexTest {
         Props props = new Props();
         props.put("v", "1");
 
-        Map<String, Object> context = new HashMap<>();
-        context.put(SnEL.CONTEXT_PROPS_KEY, props);
-
         String template = "Info: ${v2:2}#{1}";
-        String result = SnEL.evalTmpl(template, context);
+        String result = SnEL.evalTmpl(template, new  StandardContext(props));
         assertEquals("Info: 21", result);
 
         template = "Info: ${v2}#{1}";
-        result = SnEL.evalTmpl(template, context);
+        result = SnEL.evalTmpl(template, new   StandardContext(props));
         assertEquals("Info: 1", result);
     }
 
@@ -171,8 +165,7 @@ public class SnTmplComplexTest {
         Props props = new Props();
         props.put("v", "1");
 
-        StandardContext context = new StandardContext()
-                .properties(props);
+        StandardContext context = new StandardContext(props);
 
         String template = "Info: ${v2:2}#{1}";
         String result = SnEL.evalTmpl(template, context);

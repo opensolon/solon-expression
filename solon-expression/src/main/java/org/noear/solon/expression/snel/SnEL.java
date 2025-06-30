@@ -99,12 +99,6 @@ public interface SnEL {
     /// /////////////////////////////
 
     /**
-     * 上下文中的属性键（用于支持属性表达式）
-     */
-    static final String CONTEXT_PROPS_KEY = "$PROPS";
-
-
-    /**
      * 解析模板
      */
     static Expression<String> parseTmpl(String expr, boolean cached) {

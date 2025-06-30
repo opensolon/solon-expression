@@ -17,6 +17,7 @@ public class TmplTest {
         props.setProperty("lang", "java");
 
         int count = 10_000_000;
+        case1(count, "user", props);
         case1(count, "${user}", props);
         case1(count, "${user:noear}", props);
         case1(count, "${user}_${lang}", props);

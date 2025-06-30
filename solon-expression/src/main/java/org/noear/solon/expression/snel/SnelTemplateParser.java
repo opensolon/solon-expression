@@ -42,8 +42,8 @@ public class SnelTemplateParser implements Parser<String> {
         exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
     }
 
-    private static final char MARK_START1 = '#';
-    private static final char MARK_START2 = '$';
+    public static final char MARK_START1 = '#';
+    public static final char MARK_START2 = '$';
     private static final char MARK_BRACE_OPEN = '{';
     private static final char MARK_BRACE_CLOSE = '}';
 

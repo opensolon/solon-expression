@@ -49,7 +49,7 @@ public class TemplateNode implements Expression<String> {
                 if (fragment.isEvaluable()) {
                     // 如果是变量片段，从上下文中获取值
                     Object value;
-                    if (fragment.getMarker() == '$') {
+                    if (fragment.getMarker() == SnelTemplateParser.MARK_START2) {
                         value = getProps(fragment.getContent(), context);
                     } else {
                         value = SnEL.eval(fragment.getContent(), context);

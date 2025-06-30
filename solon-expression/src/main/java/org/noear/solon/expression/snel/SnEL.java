@@ -120,6 +120,11 @@ public interface SnEL {
      * @param cached  是否带编译缓存
      */
     static String evalTmpl(String expr, Function context, boolean cached) {
+        if (expr.indexOf(SnelTemplateParser.MARK_START1) < 0 && expr.indexOf(SnelTemplateParser.MARK_START2) < 0) {
+            //优化非模板性能
+            return expr;
+        }
+
         return parseTmpl(expr, cached).eval(context);
     }
 

@@ -27,32 +27,42 @@ import java.util.function.Function;
  * @since 3.1
  */
 public class TemplateNode implements Expression<String> {
-    private List<TemplateFragment> fragments;
+    private final List<TemplateFragment> fragments;
+    private TemplateFragment constantFragment;
 
     public TemplateNode(List<TemplateFragment> fragments) {
         this.fragments = fragments;
+
+        if (fragments.size() == 1 && fragments.get(0).isEvaluable() == false) {
+            //优化常量性能
+            constantFragment = fragments.get(0);
+        }
     }
 
     @Override
     public String eval(Function context) {
-        StringBuilder result = new StringBuilder();
-        for (TemplateFragment fragment : fragments) {
-            if (fragment.isEvaluable()) {
-                // 如果是变量片段，从上下文中获取值
-                Object value;
-                if (fragment.getMarker() == '$') {
-                    value = getProps(fragment.getContent(), context);
-                } else {
-                    value = SnEL.eval(fragment.getContent(), context);
-                }
+        if (constantFragment != null) {
+            return constantFragment.getContent();
+        } else {
+            StringBuilder result = new StringBuilder();
+            for (TemplateFragment fragment : fragments) {
+                if (fragment.isEvaluable()) {
+                    // 如果是变量片段，从上下文中获取值
+                    Object value;
+                    if (fragment.getMarker() == '$') {
+                        value = getProps(fragment.getContent(), context);
+                    } else {
+                        value = SnEL.eval(fragment.getContent(), context);
+                    }
 
-                result.append(value);
-            } else {
-                // 如果是文本片段，直接追加
-                result.append(fragment.getContent());
+                    result.append(value);
+                } else {
+                    // 如果是文本片段，直接追加
+                    result.append(fragment.getContent());
+                }
             }
+            return result.toString();
         }
-        return result.toString();
     }
 
     private String getProps(String expr, Function context) {

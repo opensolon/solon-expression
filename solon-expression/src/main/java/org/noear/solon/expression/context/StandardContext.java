@@ -19,7 +19,6 @@ import org.noear.solon.expression.exception.EvaluationException;
 import org.noear.solon.expression.snel.PropertyHolder;
 import org.noear.solon.expression.snel.ReflectionUtil;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;

@@ -17,6 +17,7 @@
 
     <modules>
         <module>__release</module>
+        <module>solon-expression-test</module>
     </modules>
 
 </project>

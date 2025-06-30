@@ -17,23 +17,23 @@ public class TmplTest {
         props.setProperty("lang", "java");
 
         int count = 10_000_000;
-        case1(count, "user", props);
-        case1(count, "${user}", props);
-        case1(count, "${user:noear}", props);
-        case1(count, "${user}_${lang}", props);
+        case1(count, "user", "user", props);
+        case1(count, "${user}", "${user}", props);
+        case1(count, "${user}_${lang}", "${user}_${lang}", props);
+        case1(count, "${user}_${lang}_${lang}", "${user}_${lang}_${lang}", props);
     }
 
-    private static void case1(int count, String tmpl, Properties props) {
+    private static void case1(int count, String tmpl, String tmpl2, Properties props) {
         System.out.println("----------------------------");
         System.out.println("tmpl: " + tmpl);
         System.out.println("----------------------------");
 
         System.out.println("TmplUtil:" + (TmplUtil.parse(tmpl, (Map) props)));
-        System.out.println("SnEL:" + (SnEL.evalTmpl(tmpl, new StandardContext(null, props))));
+        System.out.println("SnEL:" + (SnEL.evalTmpl(tmpl2, new StandardContext(props))));
 
         for (int i = 0; i < 10; i++) {
             TmplUtil.parse(tmpl, (Map) props);
-            SnEL.evalTmpl(tmpl, new StandardContext(null, props));
+            SnEL.evalTmpl(tmpl2, new StandardContext(props));
         }
 
         long start = System.currentTimeMillis();
@@ -46,7 +46,7 @@ public class TmplTest {
 
         start = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            SnEL.evalTmpl(tmpl, new StandardContext(null, props));
+            SnEL.evalTmpl(tmpl2, new StandardContext(props));
         }
         span = System.currentTimeMillis() - start;
         System.out.println("SnEL:" + span);

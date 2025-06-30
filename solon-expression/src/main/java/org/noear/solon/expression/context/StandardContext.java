@@ -69,6 +69,10 @@ public class StandardContext implements Function<String, Object> {
 
     @Override
     public Object apply(String name) {
+        if (target == null) {
+            return null;
+        }
+
         if ("root".equals(name)) {
             return target;
         }

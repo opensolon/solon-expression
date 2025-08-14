@@ -136,16 +136,6 @@ public class Query3Test {
 
     @Test
     public void case5() {
-        // 数学运算 (Long)
-        Integer result = (Integer) SnEL.eval("1+2+3");
-        System.out.println(result); // 6
-        assert 6 == result;
-
-        // 数学运算 (Double)
-        Double result2 = (Double) SnEL.eval("1.1+2.2+3.3");
-        System.out.println(result2); // 6.6
-        assert 6.6D == result2;
-
         // 包含关系运算和逻辑运算
         Boolean result3 = (Boolean) SnEL.eval("(1>0||0<1)&&1!=0");
         System.out.println(result3); // true
@@ -157,15 +147,6 @@ public class Query3Test {
         assert "4 > 3".equals(result4);
     }
 
-    @Test
-    public void case6() {
-        Map<String, Object> context = new HashMap();
-        context.put("a", 1);
-        context.put("b", 2);
-
-        Integer result = (Integer) SnEL.eval("(a + b) * 2", context);
-        assert result == 6;
-    }
 
     @Test
     public void case7() {

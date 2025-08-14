@@ -394,6 +394,17 @@ public class SnelEvaluateParser implements Parser {
             if (state.getCurrentChar() == '.') {
                 isDouble = true;
             }
+
+            if (state.getCurrentChar() == '-') {
+                if (sb.length() > 0) {
+                    //识别："4.56e-3"（科学表示法） 或 "1-3"（算数）
+                    char c2 = sb.charAt(sb.length() - 1);
+                    if ((c2 != 'E' || c2 != 'e')) {
+                        break;
+                    }
+                }
+            }
+
             sb.append((char) state.getCurrentChar());
             state.nextChar();
         }
@@ -547,6 +558,13 @@ public class SnelEvaluateParser implements Parser {
          */
         public boolean isNumber() {
             return Character.isDigit(ch) || ch == '-';
+        }
+
+        /**
+         * 检查当前是否是数字字符
+         */
+        public boolean isDigit() {
+            return Character.isDigit(ch);
         }
 
         /**

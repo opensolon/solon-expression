@@ -5,6 +5,8 @@ Solon-Expression（SnEL）
 </h1>
 <p align="center">
 	<strong>Solon 简单求值表达式语言（SnEL）</strong>
+    <br/>
+    <strong>克制、高效、开放</strong>
 </p>
 <p align="center">
 	<a href="https://solon.noear.org/article/learn-solon-snel">https://solon.noear.org/article/learn-solon-snel</a>

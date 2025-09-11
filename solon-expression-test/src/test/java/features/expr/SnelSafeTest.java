@@ -231,6 +231,12 @@ public class SnelSafeTest {
         Map<String, Object> context = createTestContext();
         Object result = SnEL.eval("${user.email:default@email.com}", context);
         assertEquals("default@email.com", result);
+
+        result = SnEL.eval("${user.email:default@email.com} == 'default@email.com'", context);
+        assertEquals(true, result);
+
+        result = SnEL.eval("${user.email:default@email.com} != 'default@email.com'", context);
+        assertEquals(false, result);
     }
 
     // 17. 测试${}属性表达式在复杂表达式中使用
@@ -293,6 +299,9 @@ public class SnelSafeTest {
         data.put("user.name", "John");
         result = SnEL.eval("${user.name:Guest}", context);
         assertEquals("John", result);
+
+        result = SnEL.eval("${user.name:1} == '1'");
+        assertEquals(true, result);
     }
 
     // 23. 测试安全导航数组访问

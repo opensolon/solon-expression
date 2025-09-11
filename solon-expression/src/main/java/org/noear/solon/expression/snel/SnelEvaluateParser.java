@@ -66,12 +66,39 @@ public class SnelEvaluateParser implements Parser {
     }
 
     protected Expression parseDo(String expr) {
+        // 检查是否是 ${} 表达式
+        if (isPropertyExpression(expr)) {
+            return parsePropertyExpression(expr);
+        }
+
         ParserState state = new ParserState(expr);
         Expression result = parseTernaryExpression(state);
         if (state.getCurrentChar() != -1) {
             throw new CompilationException("Unexpected trailing character: " + (char) state.getCurrentChar());
         }
         return result;
+    }
+
+    /**
+     * 检查是否是 ${} 属性表达式
+     */
+    private boolean isPropertyExpression(String expr) {
+        return expr.startsWith("${") && expr.endsWith("}");
+    }
+
+    /**
+     * 解析 ${} 属性表达式
+     */
+    private Expression parsePropertyExpression(String expr) {
+        // 提取 ${} 中的内容
+        String content = expr.substring(2, expr.length() - 1);
+
+        // 使用模板解析器来处理属性表达式（支持默认值）
+        // 创建一个只包含该属性的模板片段
+        List<TemplateFragment> fragments = new ArrayList<>();
+        fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, content));
+
+        return new TemplateNode(fragments);
     }
 
     // 以下为递归下降解析器的核心方法 ----------------------------
@@ -193,12 +220,17 @@ public class SnelEvaluateParser implements Parser {
      * 4. 布尔常量（true/false）
      * 5. 变量或属性访问（如 user.name）
      * 6. 方法调用（如 Math.add(1, 2)）
+     * 7. ${} 属性表达式（带默认值）
      */
     private Expression parsePrimaryExpression(ParserState state) {
         state.skipWhitespace();
         Expression expr;
 
-        if (eat(state, '(')) {
+        // 检查是否是 ${} 属性表达式
+        if (state.getCurrentChar() == '$' && state.peekNextChar() == '{') {
+            String propertyExpr = parsePropertyExpression(state);
+            expr = parsePropertyExpression(propertyExpr);
+        } else if (eat(state, '(')) {
             expr = parseTernaryExpression(state);
             require(state, ')', "Expected ')' after expression");
         } else if (state.isNumber()) {
@@ -222,8 +254,35 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
+     * 解析 ${} 属性表达式（从状态中读取）
+     */
+    private String parsePropertyExpression(ParserState state) {
+        StringBuilder sb = new StringBuilder();
+        sb.append((char) state.getCurrentChar()); // $
+        state.nextChar();
+        sb.append((char) state.getCurrentChar()); // {
+        state.nextChar();
+
+        int braceCount = 1;
+        while (state.getCurrentChar() != -1 && braceCount > 0) {
+            char c = (char) state.getCurrentChar();
+            sb.append(c);
+            state.nextChar();
+
+            if (c == '{') {
+                braceCount++;
+            } else if (c == '}') {
+                braceCount--;
+            }
+        }
+
+        return sb.toString();
+    }
+
+    /**
      * 处理表达式后的点、方括号和方法调用
-     * */
+     *
+     */
     private Expression parsePostfix(ParserState state, Expression expr) {
         while (true) {
             state.skipWhitespace();
@@ -538,6 +597,17 @@ public class SnelEvaluateParser implements Parser {
                 position++;
             } else {
                 ch = -1;
+            }
+        }
+
+        /**
+         * 查看下一个字符（不移动指针）
+         */
+        public int peekNextChar() {
+            if (position < reader.length()) {
+                return reader.charAt(position);
+            } else {
+                return -1;
             }
         }
 

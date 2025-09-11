@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SnTmplPropsTest {
     @Test
-    public void case1() {
+    public void case11() {
         String template = "Hello, ${user.name}!";
 
         Map<String, Object> context = new HashMap<>();
@@ -21,7 +21,7 @@ public class SnTmplPropsTest {
     }
 
     @Test
-    public void case2() {
+    public void case12() {
         String template = "Hello, ${user.name:Tom}!";
 
         Map<String, Object> context = new HashMap<>();
@@ -31,7 +31,7 @@ public class SnTmplPropsTest {
     }
 
     @Test
-    public void case3() {
+    public void case13() {
         String template = "Hello, ${user.name?:Tom}!";
 
         Map<String, Object> context = new HashMap<>();
@@ -41,13 +41,34 @@ public class SnTmplPropsTest {
     }
 
     @Test
-    public void case3_2() {
-        String template = "Hello, ${user.name?:Ddd}!"; //不支持 ?:
+    public void case13_2() {
+        String template = "Hello, ${user.name?:Ddd}!"; //不支持 `?:` 所以是 ddd
 
         Map<String, Object> context = new HashMap<>();
         context.put("user.name", "Tom");
 
         String result = SnEL.evalTmpl(template, context);
         assertEquals("Hello, Ddd!", result);
+    }
+
+
+    @Test
+    public void case21() {
+        String template = "Hello, #{${user.name:Tom}}!";
+
+        Map<String, Object> context = new HashMap<>();
+
+        String result = SnEL.evalTmpl(template, context);
+        assertEquals("Hello, Tom!", result);
+    }
+
+    @Test
+    public void case22() {
+        String template = "#{${test:Hello, }}#{${user.name:Tom}}!";
+
+        Map<String, Object> context = new HashMap<>();
+
+        String result = SnEL.evalTmpl(template, context);
+        assertEquals("Hello, Tom!", result);
     }
 }

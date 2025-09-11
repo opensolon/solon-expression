@@ -30,6 +30,7 @@ import java.util.Map;
  * <p>
  * 支持以下示例：
  * 1."name is #{user.name}, and key is ${key}"
+ * 2.支持嵌套表达式，如 "Hello, #{${user.name?:Tom}}!"
  * </p>
  * @author noear
  * @since 3.1
@@ -75,24 +76,25 @@ public class SnelTemplateParser implements Parser<String> {
                     }
                     marker = expr.charAt(exprStart);
                     inExpression = true;
-                    textStart = scanPosition = exprStart + 2; // 跳过标记符
+                    textStart = scanPosition = exprStart + 2; // 跳过标记符（如 "#{"）
                 } else {
                     // 剩余部分全部作为文本
                     fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart)));
                     break;
                 }
             } else {
-                // 表达式模式：精确查找闭合标记
-                int closePos = expr.indexOf(MARK_BRACE_CLOSE, scanPosition);
+                // 表达式模式：需要平衡大括号以处理嵌套表达式
+                int closePos = findExpressionEnd(expr, scanPosition);
                 if (closePos != -1) {
+                    String content = expr.substring(textStart, closePos);
                     if (MARK_START_PROPERTIES == marker) {
-                        fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, expr.substring(textStart, closePos)));
+                        fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, content));
                     } else {
-                        fragments.add(new TemplateFragment(TemplateMarker.EXPRESSION, expr.substring(textStart, closePos)));
+                        fragments.add(new TemplateFragment(TemplateMarker.EXPRESSION, content));
                     }
 
                     inExpression = false;
-                    textStart = scanPosition = closePos + 1; // 跳过闭合标记
+                    textStart = scanPosition = closePos + 1; // 跳过闭合标记 "}"
                 } else {
                     // 未闭合表达式作为文本回退
                     fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart - 2, textStart) + expr.substring(textStart)));
@@ -104,7 +106,7 @@ public class SnelTemplateParser implements Parser<String> {
         return new TemplateNode(fragments);
     }
 
-    // 快速定位表达式起始标记
+    // 快速定位表达式起始标记（"#{" 或 "${"）
     private int findExpressionStart(String s, int start) {
         for (int i = start; i < s.length() - 1; i++) {
             char c = s.charAt(i);
@@ -113,5 +115,22 @@ public class SnelTemplateParser implements Parser<String> {
             }
         }
         return -1;
+    }
+
+    // 查找表达式结束位置，平衡大括号以支持嵌套
+    private int findExpressionEnd(String s, int start) {
+        int braceCount = 1; // 已经有一个开括号
+        for (int i = start; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == MARK_BRACE_OPEN) {
+                braceCount++;
+            } else if (c == MARK_BRACE_CLOSE) {
+                braceCount--;
+                if (braceCount == 0) {
+                    return i;
+                }
+            }
+        }
+        return -1; // 未找到匹配的结束括号
     }
 }

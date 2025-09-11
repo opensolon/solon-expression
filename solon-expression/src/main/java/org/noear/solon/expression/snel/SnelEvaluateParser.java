@@ -75,7 +75,7 @@ public class SnelEvaluateParser implements Parser {
         }
 
         ParserState state = new ParserState(expr);
-        Expression result = parseTernaryExpression(state);
+        Expression result = parseElvisExpression(state);
         if (state.getCurrentChar() != -1) {
             throw new CompilationException("Unexpected trailing character: " + (char) state.getCurrentChar());
         }

@@ -71,7 +71,9 @@ public class TemplateNode implements Expression<String> {
 
         if (context instanceof StandardContext) {
             props = ((StandardContext) context).properties();
-        } else {
+        }
+
+        if (props == null) {
             props = context;
         }
 

@@ -187,6 +187,7 @@ public class SnelSafeTest {
     @Test
     public void testPropertyExpression_Normal() {
         Map<String, Object> context = createTestContext();
+        context.put("user.name", "John");
         Object result = SnEL.eval("${user.name}", context);
         assertEquals("John", result);
     }
@@ -204,6 +205,10 @@ public class SnelSafeTest {
     public void testPropertyExpressionInComplexExpression() {
         Map<String, Object> context = createTestContext();
         Object result = SnEL.eval("${user.name:Guest} + ' welcome!'", context);
+        assertEquals("Guest welcome!", result);
+
+        context.put("user.name", "John");
+        result = SnEL.eval("${user.name:Guest} + ' welcome!'", context);
         assertEquals("John welcome!", result);
     }
 
@@ -211,6 +216,7 @@ public class SnelSafeTest {
     @Test
     public void testBackwardCompatibility_Ternary() {
         Map<String, Object> context = createTestContext();
+        context.put("Math", Math.class);
         Object result = SnEL.eval("Math.abs(-5) > 4 ? 'A' : 'B'", context);
         assertEquals("A", result);
     }
@@ -248,6 +254,11 @@ public class SnelSafeTest {
         StandardContext context = new StandardContext(data);
 
         Object result = SnEL.eval("${user.name:Guest}", context);
+        assertEquals("Guest", result);
+
+
+        data.put("user.name", "John");
+        result = SnEL.eval("${user.name:Guest}", context);
         assertEquals("John", result);
     }
 

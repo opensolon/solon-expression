@@ -238,9 +238,11 @@ public class SnelEvaluateParser implements Parser {
                 List<Expression> args = parseMethodArguments(state);
                 require(state, ')', "Expected ')' after arguments");
                 if (expr instanceof PropertyNode) {
+                    //比如：`Math.abs(1)` - > `Math.abs(1)`
                     PropertyNode propNode = (PropertyNode) expr;
                     expr = new MethodNode(propNode.getTarget(), propNode.getPropertyName(), args);
                 } else if (expr instanceof VariableNode) {
+                    //比如：`abs(1)` - > `abs.abs(1)` //可模拟方法
                     VariableNode varNode = (VariableNode) expr;
                     expr = new MethodNode(varNode, varNode.getName(), args);
                 } else {

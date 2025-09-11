@@ -39,4 +39,15 @@ public class SnTmplPropsTest {
         String result = SnEL.evalTmpl(template, context);
         assertEquals("Hello, Tom!", result);
     }
+
+    @Test
+    public void case3_2() {
+        String template = "Hello, ${user.name?:Ddd}!"; //不支持 ?:
+
+        Map<String, Object> context = new HashMap<>();
+        context.put("user.name", "Tom");
+
+        String result = SnEL.evalTmpl(template, context);
+        assertEquals("Hello, Ddd!", result);
+    }
 }

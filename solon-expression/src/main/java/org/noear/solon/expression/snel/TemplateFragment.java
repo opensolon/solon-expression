@@ -68,7 +68,7 @@ public class TemplateFragment {
             return;
         }
 
-        //兼容 `:` 和 `?:`
+        //兼容 `:` 默认值
         int colonIdx = content.lastIndexOf(':');
 
         if (colonIdx < 0) {
@@ -76,11 +76,6 @@ public class TemplateFragment {
             propertyKey = content;
         } else {
             propertyDef = content.substring(colonIdx + 1);
-
-            if (content.charAt(colonIdx - 1) == '?') {
-                colonIdx--; //?:
-            }
-
             propertyKey = content.substring(0, colonIdx);
         }
     }

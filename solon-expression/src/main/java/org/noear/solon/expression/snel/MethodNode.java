@@ -47,11 +47,21 @@ public class MethodNode implements Expression {
     private final Expression target;    // 目标对象（如 Math 或 user）
     private final String methodName;    // 方法名（如 add 或 getName）
     private final List<Expression> args; // 方法参数列表
+    private boolean safe = false;
+
+    public MethodNode(SafeNavigationNode target, List<Expression> args) {
+        this(target.getTarget(), target.getPropertyName(), args);
+        this.safe = true;
+    }
 
     public MethodNode(Expression target, String methodName, List<Expression> args) {
         this.target = target;
         this.methodName = methodName;
         this.args = args;
+    }
+
+    public boolean isSafe() {
+        return safe;
     }
 
     @Override
@@ -127,6 +137,10 @@ public class MethodNode implements Expression {
     public String toString() {
         StringBuilder buf = new StringBuilder();
         buf.append(target);
+        if (safe) {
+            buf.append("?");
+        }
+
         buf.append(".");
         buf.append(methodName);
         buf.append("(");

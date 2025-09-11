@@ -31,6 +31,7 @@ import java.util.function.Function;
 public class PropertyNode implements Expression {
     private final Expression target;    // 目标对象（如 user）
     private final Expression property; // 属性名或索引（如 name 或 0）
+    private boolean safe = false;
 
     public PropertyNode(Expression target, String property) {
         this(target, new ConstantNode(property));
@@ -39,6 +40,15 @@ public class PropertyNode implements Expression {
     public PropertyNode(Expression target, Expression property) {
         this.target = target;
         this.property = property;
+    }
+
+    public PropertyNode(SafeNavigationNode target, Expression property) {
+        this(target.getTarget(), property);
+        this.safe = true;
+    }
+
+    public boolean isSafe() {
+        return safe;
     }
 
     @Override
@@ -119,6 +129,10 @@ public class PropertyNode implements Expression {
 
     @Override
     public String toString() {
-        return target + "[" + property + "]";
+        if (safe) {
+            return target + "?.[" + property + "]";
+        } else {
+            return target + "[" + property + "]";
+        }
     }
 }

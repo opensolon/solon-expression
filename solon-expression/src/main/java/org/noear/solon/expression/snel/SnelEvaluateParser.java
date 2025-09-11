@@ -129,11 +129,11 @@ public class SnelEvaluateParser implements Parser {
             if (eat(state, '(')) {
                 List<Expression> args = parseMethodArguments(state);
                 require(state, ')', "Expected ')' after arguments");
-                expr = new MethodNode(((SafeNavigationNode) expr).getTarget(), ((SafeNavigationNode) expr).getPropertyName(), args);
+                expr = new MethodNode((SafeNavigationNode) expr, args);
             } else if (eat(state, '[')) {
                 Expression indexExpr = parseLogicalOrExpression(state);
                 require(state, ']', "Expected ']' after index");
-                expr = new PropertyNode(((SafeNavigationNode) expr).getTarget(), indexExpr);
+                expr = new PropertyNode((SafeNavigationNode) expr, indexExpr);
             } else {
                 break;
             }

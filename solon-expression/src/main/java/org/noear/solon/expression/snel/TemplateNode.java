@@ -33,7 +33,7 @@ public class TemplateNode implements Expression<String> {
     public TemplateNode(List<TemplateFragment> fragments) {
         this.fragments = fragments;
 
-        if (fragments.size() == 1 && fragments.get(0).isEvaluable() == false) {
+        if (fragments.size() == 1 && fragments.get(0).getMarker() == TemplateMarker.TEXT) {
             //优化常量性能
             constantFragment = fragments.get(0);
         }
@@ -46,52 +46,49 @@ public class TemplateNode implements Expression<String> {
         } else {
             StringBuilder result = new StringBuilder();
             for (TemplateFragment fragment : fragments) {
-                if (fragment.isEvaluable()) {
+                if (fragment.getMarker() == TemplateMarker.TEXT) {
+                    // 如果是文本片段，直接追加
+                    result.append(fragment.getContent());
+                } else {
                     // 如果是变量片段，从上下文中获取值
                     Object value;
-                    if (fragment.getMarker() == SnelTemplateParser.MARK_START2) {
-                        value = getProps(fragment.getContent(), context);
+                    if (fragment.getMarker() == TemplateMarker.PROPERTIES) {
+                        value = getProps(fragment, context);
                     } else {
                         value = SnEL.eval(fragment.getContent(), context);
                     }
 
                     result.append(value);
-                } else {
-                    // 如果是文本片段，直接追加
-                    result.append(fragment.getContent());
                 }
             }
             return result.toString();
         }
     }
 
-    private String getProps(String expr, Function context) {
+    private String getProps(TemplateFragment expr, Function context) {
         //属性，可以传入或者
         Object props = null;
 
         if (context instanceof StandardContext) {
             props = ((StandardContext) context).properties();
+        } else {
+            props = context;
         }
-
-        if (props == null) {
-            throw new IllegalArgumentException("Missing property 'properties'");
-        }
-
-        int colonIdx = expr.lastIndexOf(':');
-        String key = (colonIdx < 0) ? expr : expr.substring(0, colonIdx);
-        String def = (colonIdx < 0) ? "" : expr.substring(colonIdx + 1);
 
         String value = null;
         if (props instanceof Properties) {
-            value = ((Properties) props).getProperty(key);
+            value = ((Properties) props).getProperty(expr.getPropertyKey());
         } else if (props instanceof Function) {
-            value = String.valueOf(((Function) props).apply(key));
+            Object tmp = ((Function) props).apply(expr.getPropertyKey());
+            if (tmp != null) {
+                value = String.valueOf(tmp);
+            }
         } else {
             throw new IllegalArgumentException("Unsupported props type: " + props.getClass());
         }
 
         if (value == null) {
-            return def;
+            return expr.getPropertyDef();
         } else {
             return value;
         }

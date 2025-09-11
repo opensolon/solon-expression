@@ -42,8 +42,8 @@ public class SnelTemplateParser implements Parser<String> {
         exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
     }
 
-    public static final char MARK_START1 = '#';
-    public static final char MARK_START2 = '$';
+    public static final char MARK_START_EXPRESSION = '#';
+    public static final char MARK_START_PROPERTIES = '$';
     private static final char MARK_BRACE_OPEN = '{';
     private static final char MARK_BRACE_CLOSE = '}';
 
@@ -71,26 +71,31 @@ public class SnelTemplateParser implements Parser<String> {
                 if (exprStart != -1) {
                     // 添加前置文本
                     if (textStart < exprStart) {
-                        fragments.add(new TemplateFragment(false, 0, expr.substring(textStart, exprStart)));
+                        fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart, exprStart)));
                     }
                     marker = expr.charAt(exprStart);
                     inExpression = true;
                     textStart = scanPosition = exprStart + 2; // 跳过标记符
                 } else {
                     // 剩余部分全部作为文本
-                    fragments.add(new TemplateFragment(false, 0, expr.substring(textStart)));
+                    fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart)));
                     break;
                 }
             } else {
                 // 表达式模式：精确查找闭合标记
                 int closePos = expr.indexOf(MARK_BRACE_CLOSE, scanPosition);
                 if (closePos != -1) {
-                    fragments.add(new TemplateFragment(true, marker, expr.substring(textStart, closePos)));
+                    if (MARK_START_PROPERTIES == marker) {
+                        fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, expr.substring(textStart, closePos)));
+                    } else {
+                        fragments.add(new TemplateFragment(TemplateMarker.EXPRESSION, expr.substring(textStart, closePos)));
+                    }
+
                     inExpression = false;
                     textStart = scanPosition = closePos + 1; // 跳过闭合标记
                 } else {
                     // 未闭合表达式作为文本回退
-                    fragments.add(new TemplateFragment(false, 0, expr.substring(textStart - 2, textStart) + expr.substring(textStart)));
+                    fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart - 2, textStart) + expr.substring(textStart)));
                     break;
                 }
             }
@@ -103,7 +108,7 @@ public class SnelTemplateParser implements Parser<String> {
     private int findExpressionStart(String s, int start) {
         for (int i = start; i < s.length() - 1; i++) {
             char c = s.charAt(i);
-            if ((c == MARK_START1 || c == MARK_START2) && s.charAt(i + 1) == MARK_BRACE_OPEN) {
+            if ((c == MARK_START_EXPRESSION || c == MARK_START_PROPERTIES) && s.charAt(i + 1) == MARK_BRACE_OPEN) {
                 return i;
             }
         }

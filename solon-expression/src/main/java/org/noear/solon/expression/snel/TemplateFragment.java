@@ -22,21 +22,16 @@ package org.noear.solon.expression.snel;
  * @since 3.1
  */
 public class TemplateFragment {
-    private boolean evaluable;
-    private int marker;
-    private String content;
+    private final TemplateMarker marker;
+    private final String content;
 
-    /**
-     * 是否可评估的
-     */
-    public boolean isEvaluable() {
-        return evaluable;
-    }
+    private String propertyKey;
+    private String propertyDef;
 
     /**
      * 标记
      */
-    public int getMarker() {
+    public TemplateMarker getMarker() {
         return marker;
     }
 
@@ -47,9 +42,46 @@ public class TemplateFragment {
         return content;
     }
 
-    public TemplateFragment(boolean evaluable, int marker, String content) {
-        this.evaluable = evaluable;
+    /**
+     * 属性键
+     */
+    public String getPropertyKey() {
+        return propertyKey;
+    }
+
+    /**
+     * 属性默认值
+     */
+    public String getPropertyDef() {
+        return propertyDef;
+    }
+
+    public TemplateFragment(TemplateMarker marker, String content) {
         this.marker = marker;
         this.content = content;
+
+        resolvePropertyName();
+    }
+
+    private void resolvePropertyName() {
+        if (marker != TemplateMarker.PROPERTIES) {
+            return;
+        }
+
+        //兼容 `:` 和 `?:`
+        int colonIdx = content.lastIndexOf(':');
+
+        if (colonIdx < 0) {
+            propertyDef = "";
+            propertyKey = content;
+        } else {
+            propertyDef = content.substring(colonIdx + 1);
+
+            if (content.charAt(colonIdx - 1) == '?') {
+                colonIdx--; //?:
+            }
+
+            propertyKey = content.substring(0, colonIdx);
+        }
     }
 }

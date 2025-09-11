@@ -28,9 +28,10 @@ import java.util.function.Function;
  * @since 3.1
  */
 public class ComparisonNode implements Expression<Boolean> {
-    private ComparisonOp operator; // 比较运算符，如 ">", "<", "=="
+    private ComparisonOp operator; // 比较运算符，如 ">", "<", "==", "!="
     private Expression left;
     private Expression right;
+    private boolean hasTemplateNode;
 
     /**
      * 获取操作符
@@ -57,6 +58,7 @@ public class ComparisonNode implements Expression<Boolean> {
         this.operator = operator;
         this.left = left;
         this.right = right;
+        this.hasTemplateNode = (left instanceof TemplateNode) || (right instanceof TemplateNode);
     }
 
     @Override
@@ -66,14 +68,18 @@ public class ComparisonNode implements Expression<Boolean> {
 
         if (operator == ComparisonOp.eq) {
             // ==
-            if (leftValue instanceof Number && rightValue instanceof Number) {
+            if (hasTemplateNode) {
+                return Objects.equals(String.valueOf(leftValue), String.valueOf(rightValue));
+            } else if (leftValue instanceof Number && rightValue instanceof Number) {
                 return ((Number) leftValue).doubleValue() == ((Number) rightValue).doubleValue();
             } else {
                 return Objects.equals(leftValue, rightValue);
             }
         } else if (operator == ComparisonOp.neq) {
             // !=
-            if (leftValue instanceof Number && rightValue instanceof Number) {
+            if (hasTemplateNode) {
+                return Objects.equals(String.valueOf(leftValue), String.valueOf(rightValue)) == false;
+            } else if (leftValue instanceof Number && rightValue instanceof Number) {
                 return ((Number) leftValue).doubleValue() != ((Number) rightValue).doubleValue();
             } else {
                 return Objects.equals(leftValue, rightValue) == false;

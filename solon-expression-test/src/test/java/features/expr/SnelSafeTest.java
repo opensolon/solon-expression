@@ -302,6 +302,9 @@ public class SnelSafeTest {
 
         result = SnEL.eval("${user.name:1} == '1'");
         assertEquals(true, result);
+
+        result = SnEL.eval("${user.name:1} == 1");
+        assertEquals(true, result);
     }
 
     // 23. 测试安全导航数组访问

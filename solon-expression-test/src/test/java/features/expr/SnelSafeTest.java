@@ -88,6 +88,13 @@ public class SnelSafeTest {
         Map<String, Object> context = createTestContext();
         Object result = SnEL.eval("user.name ?: 'Guest'", context);
         assertEquals("John", result);
+
+
+        result = SnEL.eval("user.name ?: 'Guest'");
+        assertEquals("Guest", result);
+
+        result = SnEL.eval("user.name?:'Guest'");
+        assertEquals("Guest", result);
     }
 
     // 7. 测试Elvis操作符 - null情况（使用默认值）
@@ -95,6 +102,14 @@ public class SnelSafeTest {
     public void testElvisOperator_LeftNull() {
         Map<String, Object> context = createTestContext();
         Object result = SnEL.eval("user.email ?: 'default@email.com'", context);
+        assertEquals("default@email.com", result);
+
+
+        result = SnEL.eval("user.email ?: 'default@email.com'");
+        assertEquals("default@email.com", result);
+
+
+        result = SnEL.eval("user.email?:'default@email.com'");
         assertEquals("default@email.com", result);
     }
 
@@ -105,6 +120,12 @@ public class SnelSafeTest {
         context.put("user", null);
         Object result = SnEL.eval("user?.age ?: 18", context);
         assertEquals(18, result);
+
+        result = SnEL.eval("user?.age ?: 18");
+        assertEquals(18, result);
+
+        result = SnEL.eval("user?.age?:18");
+        assertEquals(18, result);
     }
 
     // 9. 测试安全导航和Elvis组合使用
@@ -112,6 +133,12 @@ public class SnelSafeTest {
     public void testSafeNavigationWithElvis() {
         Map<String, Object> context = createTestContext();
         Object result = SnEL.eval("user?.email ?: 'no-email'", context);
+        assertEquals("no-email", result);
+
+        result = SnEL.eval("user?.email ?: 'no-email'");
+        assertEquals("no-email", result);
+
+        result = SnEL.eval("user?.email?:'no-email'");
         assertEquals("no-email", result);
     }
 
@@ -121,6 +148,12 @@ public class SnelSafeTest {
         Map<String, Object> context = createTestContext();
         Object result = SnEL.eval("(user?.age ?: 18) > 20", context);
         assertEquals(true, result); // 25 > 20
+
+        result = SnEL.eval("(user?.age ?: 18) > 20");
+        assertEquals(false, result); // 25 > 20
+
+        result = SnEL.eval("(user?.age?:18) > 20");
+        assertEquals(false, result); // 25 > 20
     }
 
 
@@ -282,7 +315,7 @@ public class SnelSafeTest {
     public void testNestedPropertyExpression() {
         Map<String, Object> context = createTestContext();
         // 注意：这里需要确保SnelTemplateParser也支持嵌套
-        Object result = SnEL.evalTmpl("Hello, #{${user.name?:Tom}}!", context);
+        Object result = SnEL.evalTmpl("Hello, #{${user.name:Tom}}!", context);
         assertEquals("Hello, Tom!", result);
     }
 }

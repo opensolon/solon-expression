@@ -39,6 +39,9 @@ import org.noear.solon.expression.util.LRUCache;
  * 6. 三元表达式：condition ? trueExpr : falseExpr
  * 7. 布尔常量：直接解析 true/false
  * 8. 空值安全：属性或方法不存在时返回 null，避免 NPE
+ * 9. 支持 ${} 属性表达式（带默认值）
+ * 10. 支持安全导航操作符 `?.`
+ * 11. 支持 Elvis 操作符 `?:`
  * </p>
  *
  * @author noear
@@ -80,6 +83,65 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
+     * 解析 Elvis 操作符 ?:
+     */
+    private Expression parseElvisExpression(ParserState state) {
+        Expression left = parseTernaryExpression(state);
+        state.skipWhitespace();
+
+        // 检查 Elvis 操作符 ?: (注意：这里要区分三元表达式中的 ?)
+        if (state.getCurrentChar() == '?' && state.peekNextChar() == ':') {
+            state.nextChar(); // 跳过 ?
+            state.nextChar(); // 跳过 :
+            Expression right = parseElvisExpression(state);
+            return new ElvisNode(left, right);
+        }
+        return left;
+    }
+
+    /**
+     * 解析安全导航操作符 ?.
+     */
+    private Expression parseSafeNavigationExpression(ParserState state) {
+        Expression left = parsePrimaryExpression(state);
+
+        // 处理安全导航操作符 ?.
+        while (state.getCurrentChar() == '?' && state.peekNextChar() == '.') {
+            state.nextChar(); // 跳过 ?
+            state.nextChar(); // 跳过 .
+            state.skipWhitespace();
+
+            String identifier = parseIdentifier(state);
+            left = new SafeNavigationNode(left, identifier);
+
+            // 处理安全导航后的方法调用
+            left = parsePostfixAfterSafeNavigation(state, left);
+        }
+        return left;
+    }
+
+    /**
+     * 解析安全导航后的后缀操作（方法调用等）
+     */
+    private Expression parsePostfixAfterSafeNavigation(ParserState state, Expression expr) {
+        while (true) {
+            state.skipWhitespace();
+            if (eat(state, '(')) {
+                List<Expression> args = parseMethodArguments(state);
+                require(state, ')', "Expected ')' after arguments");
+                expr = new SafeMethodNode((SafeNavigationNode) expr, ((SafeNavigationNode) expr).getPropertyName(), args);
+            } else if (eat(state, '[')) {
+                Expression indexExpr = parseLogicalOrExpression(state);
+                require(state, ']', "Expected ']' after index");
+                expr = new SafePropertyNode((SafeNavigationNode) expr, indexExpr);
+            } else {
+                break;
+            }
+        }
+        return expr;
+    }
+
+    /**
      * 检查是否是 ${} 属性表达式
      */
     private boolean isPropertyExpression(String expr) {
@@ -108,7 +170,12 @@ public class SnelEvaluateParser implements Parser {
      */
     private Expression parseTernaryExpression(ParserState state) {
         Expression condition = parseLogicalOrExpression(state);
-        if (eat(state, '?')) {
+        state.skipWhitespace();
+
+        // 检查三元操作符 ? :
+        if (state.getCurrentChar() == '?' && state.peekNextChar() != '.' && state.peekNextChar() != ':') {
+            state.nextChar(); // 跳过 ?
+            state.skipWhitespace();
             Expression<Object> trueExpr = parseTernaryExpression(state);
             require(state, ':', "Expected ':' in ternary expression");
             Expression<Object> falseExpr = parseTernaryExpression(state);
@@ -197,14 +264,14 @@ public class SnelEvaluateParser implements Parser {
      * 解析乘除法表达式
      */
     private Expression parseMultiplicativeExpression(ParserState state) {
-        Expression left = parsePrimaryExpression(state);
+        Expression left = parseSafeNavigationExpression(state);
         while (true) {
             if (eat(state, '*')) {
-                left = new ArithmeticNode(ArithmeticOp.MUL, left, parsePrimaryExpression(state));
+                left = new ArithmeticNode(ArithmeticOp.MUL, left, parseSafeNavigationExpression(state));
             } else if (eat(state, '/')) {
-                left = new ArithmeticNode(ArithmeticOp.DIV, left, parsePrimaryExpression(state));
+                left = new ArithmeticNode(ArithmeticOp.DIV, left, parseSafeNavigationExpression(state));
             } else if (eat(state, '%')) {
-                left = new ArithmeticNode(ArithmeticOp.MOD, left, parsePrimaryExpression(state));
+                left = new ArithmeticNode(ArithmeticOp.MOD, left, parseSafeNavigationExpression(state));
             } else {
                 break;
             }
@@ -231,7 +298,7 @@ public class SnelEvaluateParser implements Parser {
             String propertyExpr = parsePropertyExpression(state);
             expr = parsePropertyExpression(propertyExpr);
         } else if (eat(state, '(')) {
-            expr = parseTernaryExpression(state);
+            expr = parseElvisExpression(state);
             require(state, ')', "Expected ')' after expression");
         } else if (state.isNumber()) {
             expr = new ConstantNode(parseNumber(state));
@@ -280,9 +347,8 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
-     * 处理表达式后的点、方括号和方法调用
-     *
-     */
+     * 处理表达式后的点、方括号和方法调用（支持安全导航）
+     * */
     private Expression parsePostfix(ParserState state, Expression expr) {
         while (true) {
             state.skipWhitespace();
@@ -297,11 +363,9 @@ public class SnelEvaluateParser implements Parser {
                 List<Expression> args = parseMethodArguments(state);
                 require(state, ')', "Expected ')' after arguments");
                 if (expr instanceof PropertyNode) {
-                    //比如：`Math.abs(1)` - > `Math.abs(1)`
                     PropertyNode propNode = (PropertyNode) expr;
                     expr = new MethodNode(propNode.getTarget(), propNode.getPropertyName(), args);
                 } else if (expr instanceof VariableNode) {
-                    //比如：`abs(1)` - > `abs.abs(1)` //可模拟方法
                     VariableNode varNode = (VariableNode) expr;
                     expr = new MethodNode(varNode, varNode.getName(), args);
                 } else {
@@ -540,9 +604,11 @@ public class SnelEvaluateParser implements Parser {
      * 检查并跳过指定字符，否则抛出异常
      */
     private void require(ParserState state, char expected, String errorMessage) {
-        if (!eat(state, expected)) {
+        state.skipWhitespace();
+        if (state.getCurrentChar() != expected) {
             throw new CompilationException(errorMessage);
         }
+        state.nextChar();
     }
 
     /**

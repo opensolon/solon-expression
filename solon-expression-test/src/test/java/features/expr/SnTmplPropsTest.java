@@ -28,20 +28,22 @@ public class SnTmplPropsTest {
 
         String result = SnEL.evalTmpl(template, context);
         assertEquals("Hello, Tom!", result);
+
+
+        result = SnEL.evalTmpl("${user.name:}");
+        assertEquals("", result);
+
+
+        result = SnEL.evalTmpl("${user.name}");
+        assertEquals("", result);
+
+        result = SnEL.evalTmpl("${user.name:a}");
+        assertEquals("a", result);
     }
+
 
     @Test
     public void case13() {
-        String template = "Hello, ${user.name?:Tom}!";
-
-        Map<String, Object> context = new HashMap<>();
-
-        String result = SnEL.evalTmpl(template, context);
-        assertEquals("Hello, Tom!", result);
-    }
-
-    @Test
-    public void case13_2() {
         String template = "Hello, ${user.name?:Ddd}!"; //不支持 `?:` 所以是 ddd
 
         Map<String, Object> context = new HashMap<>();

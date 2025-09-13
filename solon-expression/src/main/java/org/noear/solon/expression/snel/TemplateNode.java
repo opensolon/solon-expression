@@ -27,6 +27,8 @@ import java.util.function.Function;
  * @since 3.1
  */
 public class TemplateNode implements Expression<String> {
+    public static final String KEY_PROPERTIES = "$properties";
+
     private final List<TemplateFragment> fragments;
     private TemplateFragment constantFragment;
 
@@ -71,6 +73,10 @@ public class TemplateNode implements Expression<String> {
 
         if (context instanceof StandardContext) {
             props = ((StandardContext) context).properties();
+        }
+
+        if (props == null) {
+            props = context.apply(KEY_PROPERTIES);
         }
 
         if (props == null) {

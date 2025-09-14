@@ -52,7 +52,7 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
         return this;
     }
 
-    public EnhanceContext fortypeGuidance(TypeGuidance typeGuidance) {
+    public EnhanceContext forTypeGuidance(TypeGuidance typeGuidance) {
         this.typeGuidance = typeGuidance;
         return this;
     }

@@ -17,7 +17,6 @@ package org.noear.solon.expression.snel;
 
 import org.noear.solon.expression.Expression;
 import org.noear.solon.expression.guidance.TypeGuidance;
-import org.noear.solon.expression.exception.EvaluationException;
 
 import java.util.function.Function;
 
@@ -38,10 +37,12 @@ public class TypeNode implements Expression<Class<?>> {
     @Override
     public Class<?> eval(Function context) {
         if (type == null) {
-            if (context instanceof TypeGuidance) {
-                type = ((TypeGuidance) context).getType(className);
-            } else {
-                throw new IllegalStateException("The current context is not supported: 'T(.)'");
+            if (type == null) {
+                if (context instanceof TypeGuidance) {
+                    type = ((TypeGuidance) context).getType(className);
+                } else {
+                    throw new IllegalStateException("The current context is not supported: 'T(.)'");
+                }
             }
         }
 

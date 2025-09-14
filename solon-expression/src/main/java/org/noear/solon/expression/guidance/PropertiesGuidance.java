@@ -33,4 +33,9 @@ public interface PropertiesGuidance {
      * 允许属性默认值
      */
     boolean allowPropertyDefault();
+
+    /**
+     * 允许属性嵌套
+     */
+    boolean allowPropertyNesting();
 }

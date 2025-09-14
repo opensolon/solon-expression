@@ -41,6 +41,7 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
     private TypeGuidance typeGuidance = TypeGuidanceUnsafety.INSTANCE;
     private Properties properties;
     private boolean allowPropertyDefault = true;
+    private boolean allowPropertyNesting = false;
     private boolean isReturnNull;
 
     public EnhanceContext(Object target) {
@@ -55,6 +56,11 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
 
     public EnhanceContext forAllowPropertyDefault(boolean allowPropertyDefault) {
         this.allowPropertyDefault = allowPropertyDefault;
+        return this;
+    }
+
+    public EnhanceContext forAllowPropertyNesting(boolean allowPropertyNesting) {
+        this.allowPropertyNesting = allowPropertyNesting;
         return this;
     }
 
@@ -122,6 +128,11 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
     @Override
     public boolean allowPropertyDefault() {
         return allowPropertyDefault;
+    }
+
+    @Override
+    public boolean allowPropertyNesting() {
+        return allowPropertyNesting;
     }
 
     //ReturnGuidance

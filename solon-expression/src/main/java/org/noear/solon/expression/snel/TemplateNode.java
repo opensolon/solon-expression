@@ -48,6 +48,7 @@ public class TemplateNode implements Expression<String> {
 
             boolean isReturnNull = false;
             boolean allowPropertyDefault = true;
+            boolean allowPropertyNesting = false;
             Object propsObject = null;
 
             if (context instanceof ReturnGuidance) {
@@ -58,6 +59,7 @@ public class TemplateNode implements Expression<String> {
                 PropertiesGuidance tmp = ((PropertiesGuidance) context);
                 propsObject = tmp.getProperties();
                 allowPropertyDefault = tmp.allowPropertyDefault();
+                allowPropertyNesting = tmp.allowPropertyNesting();
             }
 
             if (propsObject == null) {
@@ -76,8 +78,14 @@ public class TemplateNode implements Expression<String> {
                     Object value;
                     if (fragment.getMarker() == TemplateMarker.PROPERTIES) {
                         value = getProps(fragment, propsObject, allowPropertyDefault);
-                        //属性表达式，无值为空（即不入值）
+
+                        if (value != null && allowPropertyNesting) {
+                            //模板里可能会（动态）再套模型
+                            value = SnEL.evalTmpl((String) value, context);
+                        }
+
                         if (value != null) {
+                            //属性表达式，无值为空（即不入值）
                             result.append(value);
                         }
                     } else {

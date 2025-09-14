@@ -58,7 +58,7 @@ public class SnelTemplateParser implements Parser<String> {
     }
 
     private Expression<String> parseDo(String expr) {
-        List<TemplateFragment> fragments = new ArrayList<>(expr.length() / 16); // 基于经验值的容量初始化
+        List<TemplateFragment> fragments = new ArrayList<>(8); // 基于经验值的容量初始化
         boolean inExpression = false;
         char marker = 0;
         int textStart = 0;

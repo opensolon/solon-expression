@@ -108,25 +108,23 @@ public class ReflectionUtil {
         // 获取可变参数的元素类型
         Class<?> varArgComponentType = varArgType.getComponentType();
 
-        // 检查参数匹配 - 允许零个可变参数
+        // 检查参数数量：必须 >= 固定参数数量 - 1
+        // 对于 Arrays.asList() 这种情况，argTypes.length = 0, paramTypes.length = 1
         if (argTypes.length < paramTypes.length - 1) {
-            // 参数数量不足
             return false;
         }
 
         // 检查固定参数
         for (int i = 0; i < paramTypes.length - 1; i++) {
-            if (!isAssignable(paramTypes[i], argTypes[i])) {
+            if (i < argTypes.length && !isAssignable(paramTypes[i], argTypes[i])) {
                 return false;
             }
         }
 
-        // 检查可变参数 - 如果没有可变参数，也是有效的
-        if (argTypes.length > paramTypes.length - 1) {
-            for (int i = paramTypes.length - 1; i < argTypes.length; i++) {
-                if (!isAssignable(varArgComponentType, argTypes[i])) {
-                    return false;
-                }
+        // 检查可变参数
+        for (int i = paramTypes.length - 1; i < argTypes.length; i++) {
+            if (!isAssignable(varArgComponentType, argTypes[i])) {
+                return false;
             }
         }
 
@@ -165,36 +163,31 @@ public class ReflectionUtil {
         Class<?>[] paramTypes = method.getParameterTypes();
         int fixedParamCount = paramTypes.length - 1;
 
-        // 如果参数数量正好匹配固定参数，不需要特殊处理
-        if (argValues.length == fixedParamCount) {
-            return argValues;
-        }
-
         // 准备调用参数
         Object[] invokeArgs = new Object[paramTypes.length];
 
-        // 复制固定参数
-        System.arraycopy(argValues, 0, invokeArgs, 0, Math.min(fixedParamCount, argValues.length));
+        // 处理固定参数（对于 Arrays.asList()，fixedParamCount = 0）
+        for (int i = 0; i < fixedParamCount; i++) {
+            if (i < argValues.length) {
+                invokeArgs[i] = argValues[i];
+            } else {
+                // 如果没有足够的参数，设置为 null
+                invokeArgs[i] = null;
+            }
+        }
 
         // 处理可变参数
         Class<?> varArgType = paramTypes[fixedParamCount];
         Class<?> varArgComponentType = varArgType.getComponentType();
 
-        if (argValues.length >= fixedParamCount) {
-            int varArgCount = argValues.length - fixedParamCount;
+        int varArgCount = Math.max(0, argValues.length - fixedParamCount);
+        Object varArgsArray = java.lang.reflect.Array.newInstance(varArgComponentType, varArgCount);
 
-            // 创建可变参数数组
-            Object varArgsArray = java.lang.reflect.Array.newInstance(varArgComponentType, varArgCount);
-            for (int i = 0; i < varArgCount; i++) {
-                java.lang.reflect.Array.set(varArgsArray, i, argValues[fixedParamCount + i]);
-            }
-
-            invokeArgs[fixedParamCount] = varArgsArray;
-        } else {
-            // 如果没有可变参数，创建一个空数组
-            Object emptyArray = java.lang.reflect.Array.newInstance(varArgComponentType, 0);
-            invokeArgs[fixedParamCount] = emptyArray;
+        for (int i = 0; i < varArgCount; i++) {
+            java.lang.reflect.Array.set(varArgsArray, i, argValues[fixedParamCount + i]);
         }
+
+        invokeArgs[fixedParamCount] = varArgsArray;
 
         return invokeArgs;
     }

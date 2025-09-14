@@ -16,6 +16,7 @@
 package org.noear.solon.expression.snel;
 
 import org.noear.solon.expression.Expression;
+import org.noear.solon.expression.guidance.TypeGuidance;
 import org.noear.solon.expression.exception.EvaluationException;
 
 import java.util.function.Function;
@@ -26,22 +27,25 @@ import java.util.function.Function;
  * @author noear
  * @since 3.1
  */
-public class TypeExpressionNode implements Expression<Class<?>> {
+public class TypeNode implements Expression<Class<?>> {
     private final String className;
-    private final Class<?> type;
+    private Class<?> type;
 
-    public TypeExpressionNode(String className) {
+    public TypeNode(String className) {
         this.className = className;
-        try {
-            type = Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            throw new EvaluationException("Class not found: " + className, e);
-        }
     }
 
     @Override
     public Class<?> eval(Function context) {
-        return this.type;
+        if (type == null) {
+            if (context instanceof TypeGuidance) {
+                type = ((TypeGuidance) context).getType(className);
+            } else {
+                throw new IllegalStateException("The current context is not supported: 'T(.)'");
+            }
+        }
+
+        return type;
     }
 
     @Override

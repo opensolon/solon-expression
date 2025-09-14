@@ -298,7 +298,7 @@ public class SnelEvaluateParser implements Parser {
             // 检查是否是 T(...) 类型表达式
             String className = parseClassName(state);
             require(state, ')', "Expected ')' after class name in T(...) expression");
-            expr = new TypeExpressionNode(className);
+            expr = new TypeNode(className);
         } else if  (state.getCurrentChar() == '$' && state.peekNextChar() == '{') {
             // 检查是否是 ${} 属性表达式
             String propertyExpr = parsePropertyExpression(state);

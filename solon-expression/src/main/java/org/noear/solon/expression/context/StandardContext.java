@@ -16,9 +16,12 @@
 package org.noear.solon.expression.context;
 
 import org.noear.solon.expression.exception.EvaluationException;
+import org.noear.solon.expression.guidance.PropertiesGuidance;
+import org.noear.solon.expression.guidance.ReturnGuidance;
+import org.noear.solon.expression.guidance.TypeGuidance;
+import org.noear.solon.expression.guidance.TypeGuidanceUnsafety;
 import org.noear.solon.expression.snel.PropertyHolder;
 import org.noear.solon.expression.snel.ReflectionUtil;
-import org.noear.solon.expression.snel.SnEL;
 
 import java.util.Map;
 import java.util.Properties;
@@ -30,24 +33,32 @@ import java.util.function.Function;
  * @author noear
  * @since 3.2
  */
-public class StandardContext implements Function<String, Object> {
+public class StandardContext implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
     private final Object target;
     private final boolean isMap;
-    private final Properties properties;
+
+    private TypeGuidance typeGuidance = TypeGuidanceUnsafety.INSTANCE;
+    private Properties properties;
+    private boolean isReturnNull;
 
     public StandardContext(Object target) {
-        this(target, null);
-    }
-
-    public StandardContext(Object target, Properties properties) {
         this.target = target;
         this.isMap = target instanceof Map;
+    }
 
-        if (properties == null && target instanceof Properties) {
-            this.properties = (Properties) target;
-        } else {
-            this.properties = properties;
-        }
+    public StandardContext properties(Properties properties) {
+        this.properties = properties;
+        return this;
+    }
+
+    public StandardContext typeGuidance(TypeGuidance typeGuidance) {
+        this.typeGuidance = typeGuidance;
+        return this;
+    }
+
+    public StandardContext isReturnNull(boolean isReturnNull) {
+        this.isReturnNull = isReturnNull;
+        return this;
     }
 
     private Object lastValue;
@@ -56,12 +67,6 @@ public class StandardContext implements Function<String, Object> {
     public Object apply(String name) {
         if (target == null) {
             return null;
-        }
-
-        if (properties != null) {
-            if (SnEL.KEY_PROPERTIES.equals(name)) {
-                return properties;
-            }
         }
 
         if ("root".equals(name)) {
@@ -89,5 +94,27 @@ public class StandardContext implements Function<String, Object> {
         }
 
         return lastValue;
+    }
+
+    //TypeGuidance
+    @Override
+    public Class<?> getType(String typeName) throws EvaluationException {
+        if (typeGuidance == null) {
+            throw new IllegalStateException("The current context is not supported: 'T(.)'");
+        } else {
+            return typeGuidance.getType(typeName);
+        }
+    }
+
+    //PropertiesGuidance
+    @Override
+    public Properties getProperties() {
+        return properties;
+    }
+
+    //ReturnGuidance
+    @Override
+    public boolean isReturnNull() {
+        return isReturnNull;
     }
 }

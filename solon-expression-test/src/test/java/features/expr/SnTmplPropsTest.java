@@ -1,12 +1,14 @@
 package features.expr;
 
 import org.junit.jupiter.api.Test;
+import org.noear.solon.expression.context.StandardContext;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class SnTmplPropsTest {
     @Test
@@ -72,5 +74,13 @@ public class SnTmplPropsTest {
 
         String result = SnEL.evalTmpl(template, context);
         assertEquals("Hello, Tom!", result);
+    }
+
+    @Test
+    public void case23() {
+        StandardContext context = new StandardContext(null).isReturnNull(true);
+
+        String result = SnEL.evalTmpl("${user}", context);
+        assertNull(result);
     }
 }

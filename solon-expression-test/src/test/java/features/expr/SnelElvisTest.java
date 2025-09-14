@@ -303,37 +303,38 @@ public class SnelElvisTest {
         result = SnEL.eval("${user.name:1} == '1'");
         assertEquals(true, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) == 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) == 1", new StandardContext(null));
         assertEquals(true, result);
     }
 
     @Test
-    public void testPropertyExpressionCompare(){
-        Object result  = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) > 1");
+    public void testPropertyExpressionCompare() {
+        StandardContext context = new StandardContext(null);
+        Object result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) > 1", context);
         assertEquals(false, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) >= 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) >= 1", context);
         assertEquals(true, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) > 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) > 1", context);
         assertEquals(true, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) >= 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) >= 1", context);
         assertEquals(true, result);
 
         /// /////////////
 
 
-        result  = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) < 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) < 1", context);
         assertEquals(false, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) <= 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) <= 1", context);
         assertEquals(true, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) < 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) < 1", context);
         assertEquals(false, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) <= 1");
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:2}) <= 1", context);
         assertEquals(false, result);
     }
 

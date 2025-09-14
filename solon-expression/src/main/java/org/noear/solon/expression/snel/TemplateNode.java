@@ -16,6 +16,8 @@
 package org.noear.solon.expression.snel;
 
 import org.noear.solon.expression.Expression;
+import org.noear.solon.expression.guidance.PropertiesGuidance;
+import org.noear.solon.expression.guidance.ReturnGuidance;
 
 import java.util.List;
 import java.util.Properties;
@@ -44,7 +46,10 @@ public class TemplateNode implements Expression<String> {
             return constantFragment.getContent();
         } else {
 
-            Boolean isNullReturn = (Boolean) context.apply(SnEL.KEY_IF_NULL_RETURN);
+            boolean isReturnNull = false;
+            if (context instanceof ReturnGuidance) {
+                isReturnNull = ((ReturnGuidance) context).isReturnNull();
+            }
 
             StringBuilder result = new StringBuilder();
             for (TemplateFragment fragment : fragments) {
@@ -65,7 +70,7 @@ public class TemplateNode implements Expression<String> {
                         result.append(value);
                     }
 
-                    if (isNullReturn != null && isNullReturn) {
+                    if (isReturnNull) {
                         return null;
                     }
                 }
@@ -79,8 +84,8 @@ public class TemplateNode implements Expression<String> {
         //属性，可以传入或者
         Object props = null;
 
-        if (props == null) {
-            props = context.apply(SnEL.KEY_PROPERTIES);
+        if (context instanceof PropertiesGuidance) {
+            props = ((PropertiesGuidance) context).getProperties();
         }
 
         if (props == null) {

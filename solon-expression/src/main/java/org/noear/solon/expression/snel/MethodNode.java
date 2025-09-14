@@ -86,18 +86,27 @@ public class MethodNode implements Expression {
                 targetClass = targetValue.getClass();
             }
 
-            // 查找方法
-            Method method = findMethod(targetClass, methodName, argValues);
+            // 获取参数类型
+            Class<?>[] argTypes = new Class<?>[argValues.length];
+            for (int i = 0; i < argValues.length; i++) {
+                argTypes[i] = getEffectiveClass(argValues[i]);
+            }
+
+            // 查找方法（ReflectionUtil 会自动处理可变参数）
+            Method method = methodUtil.getMethod(targetClass, methodName, argTypes);
             if (method == null) {
                 throw new EvaluationException("Method not found: " + methodName);
             }
 
+            // 准备调用参数（ReflectionUtil 处理可变参数）
+            Object[] invokeArgs = methodUtil.prepareInvokeArgs(method, argValues);
+
             // 调用方法
             if (targetValue instanceof Class<?>) {
                 //静态方法
-                return method.invoke(null, argValues);
+                return method.invoke(null, invokeArgs);
             } else {
-                return method.invoke(targetValue, argValues);
+                return method.invoke(targetValue, invokeArgs);
             }
         } catch (Throwable e) {
             throw new EvaluationException("Failed to invoke method: " + methodName, e);

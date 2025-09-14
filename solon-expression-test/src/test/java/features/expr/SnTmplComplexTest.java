@@ -2,7 +2,7 @@ package features.expr;
 
 import org.junit.jupiter.api.Test;
 import org.noear.solon.core.Props;
-import org.noear.solon.expression.context.StandardContext;
+import org.noear.solon.expression.context.EnhanceContext;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.util.HashMap;
@@ -142,7 +142,7 @@ public class SnTmplComplexTest {
         props.put("v", "1");
 
         String template = "Info: ${v}#{1}";
-        String result = SnEL.evalTmpl(template, new StandardContext(props));
+        String result = SnEL.evalTmpl(template, new EnhanceContext(props));
         assertEquals("Info: 11", result);
     }
 
@@ -152,11 +152,11 @@ public class SnTmplComplexTest {
         props.put("v", "1");
 
         String template = "Info: ${v2:2}#{1}";
-        String result = SnEL.evalTmpl(template, new  StandardContext(props));
+        String result = SnEL.evalTmpl(template, new EnhanceContext(props));
         assertEquals("Info: 21", result);
 
         template = "Info: ${v2}#{1}";
-        result = SnEL.evalTmpl(template, new   StandardContext(props));
+        result = SnEL.evalTmpl(template, new EnhanceContext(props));
         assertEquals("Info: 1", result);
     }
 
@@ -165,7 +165,7 @@ public class SnTmplComplexTest {
         Props props = new Props();
         props.put("v", "1");
 
-        StandardContext context = new StandardContext(props);
+        EnhanceContext context = new EnhanceContext(props);
 
         String template = "Info: ${v2:2}#{1}";
         String result = SnEL.evalTmpl(template, context);

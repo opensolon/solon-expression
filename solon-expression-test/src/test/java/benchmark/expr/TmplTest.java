@@ -1,7 +1,7 @@
 package benchmark.expr;
 
 import org.noear.solon.core.util.TmplUtil;
-import org.noear.solon.expression.context.StandardContext;
+import org.noear.solon.expression.context.EnhanceContext;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.util.HashMap;
@@ -47,11 +47,11 @@ public class TmplTest {
         System.out.println("----------------------------");
 
         System.out.println("TmplUtil:" + (TmplUtil.parse(tmpl, props)));
-        System.out.println("SnEL:" + (SnEL.evalTmpl(tmpl2, new StandardContext(props))));
+        System.out.println("SnEL:" + (SnEL.evalTmpl(tmpl2, new EnhanceContext(props))));
 
         for (int i = 0; i < 10; i++) {
             TmplUtil.parse(tmpl, props);
-            SnEL.evalTmpl(tmpl2, new StandardContext(props));
+            SnEL.evalTmpl(tmpl2, new EnhanceContext(props));
         }
 
         long start = System.currentTimeMillis();
@@ -64,7 +64,7 @@ public class TmplTest {
 
         start = System.currentTimeMillis();
         for (int i = 0; i < count; i++) {
-            SnEL.evalTmpl(tmpl2, new StandardContext(props));
+            SnEL.evalTmpl(tmpl2, new EnhanceContext(props));
         }
         span = System.currentTimeMillis() - start;
         System.out.println("SnEL:" + span);

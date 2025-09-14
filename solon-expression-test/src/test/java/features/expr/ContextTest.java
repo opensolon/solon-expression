@@ -1,7 +1,7 @@
 package features.expr;
 
 import org.junit.jupiter.api.Test;
-import org.noear.solon.expression.context.StandardContext;
+import org.noear.solon.expression.context.EnhanceContext;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.util.HashMap;
@@ -25,16 +25,16 @@ public class ContextTest {
         Map<String, Object> context = new HashMap();
         context.put("order", order);
 
-        Object result = SnEL.eval("order.user.age == 20 ? true : false", new StandardContext(context));
+        Object result = SnEL.eval("order.user.age == 20 ? true : false", new EnhanceContext(context));
         assert true == (Boolean) result;
 
 
-        result = SnEL.eval("order.user.age == order.user.age2 ? true : false", new StandardContext(context));
+        result = SnEL.eval("order.user.age == order.user.age2 ? true : false", new EnhanceContext(context));
         assert false == (Boolean) result;
 
 
         //支持 root 变量
-        result = SnEL.eval("root.order.user.age == order.user.age2 ? true : false", new StandardContext(context));
+        result = SnEL.eval("root.order.user.age == order.user.age2 ? true : false", new EnhanceContext(context));
         assert false == (Boolean) result;
     }
 
@@ -43,37 +43,37 @@ public class ContextTest {
     public void case2() {
         User user = new User("world", 20);
 
-        Object result = SnEL.eval("age == 20 ? true : false", new StandardContext(user));
+        Object result = SnEL.eval("age == 20 ? true : false", new EnhanceContext(user));
         assert true == (Boolean) result;
 
 
         //支持 root 变量
-        result = SnEL.eval("root.age == 20 ? true : false", new StandardContext(user));
+        result = SnEL.eval("root.age == 20 ? true : false", new EnhanceContext(user));
         assert true == (Boolean) result;
 
-        result = SnEL.eval("root['age'] == 20 ? true : false", new StandardContext(user));
+        result = SnEL.eval("root['age'] == 20 ? true : false", new EnhanceContext(user));
         assert true == (Boolean) result;
     }
 
     @Test
     public void case3() {
-        Object result = SnEL.eval("root == true", new StandardContext(true));
+        Object result = SnEL.eval("root == true", new EnhanceContext(true));
         assert true == (Boolean) result;
 
-        result = SnEL.eval("root == true", new StandardContext(false));
+        result = SnEL.eval("root == true", new EnhanceContext(false));
         assert false == (Boolean) result;
     }
 
 
     @Test
     public void case4() {
-        Object result = SnEL.eval("root.substring(1, this.length() - 1)", new StandardContext("abcde"));
+        Object result = SnEL.eval("root.substring(1, this.length() - 1)", new EnhanceContext("abcde"));
         assert "bcd".equals(result);
 
         Map<String, Object> map = new HashMap<>();
         map.put("name", "world");
 
-        result = SnEL.eval("name.substring(1, this.length() - 1)", new StandardContext(map));
+        result = SnEL.eval("name.substring(1, this.length() - 1)", new EnhanceContext(map));
         assert "orl".equals(result);
     }
 

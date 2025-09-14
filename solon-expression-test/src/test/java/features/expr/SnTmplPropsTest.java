@@ -1,7 +1,7 @@
 package features.expr;
 
 import org.junit.jupiter.api.Test;
-import org.noear.solon.expression.context.StandardContext;
+import org.noear.solon.expression.context.EnhanceContext;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.util.HashMap;
@@ -78,7 +78,7 @@ public class SnTmplPropsTest {
 
     @Test
     public void case23() {
-        StandardContext context = new StandardContext(null).isReturnNull(true);
+        EnhanceContext context = new EnhanceContext(null).forReturnNull(true);
 
         String result = SnEL.evalTmpl("${user}", context);
         assertNull(result);

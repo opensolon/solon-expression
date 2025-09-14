@@ -1,7 +1,7 @@
 package features.expr;
 
 import org.junit.jupiter.api.Test;
-import org.noear.solon.expression.context.StandardContext;
+import org.noear.solon.expression.context.EnhanceContext;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.util.HashMap;
@@ -290,7 +290,7 @@ public class SnelElvisTest {
     @Test
     public void testPropertyExpressionWithStandardContext() {
         Map<String, Object> data = createTestContext();
-        StandardContext context = new StandardContext(data);
+        EnhanceContext context = new EnhanceContext(data);
 
         Object result = SnEL.eval("${user.name:Guest}", context);
         assertEquals("Guest", result);
@@ -303,13 +303,13 @@ public class SnelElvisTest {
         result = SnEL.eval("${user.name:1} == '1'");
         assertEquals(true, result);
 
-        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) == 1", new StandardContext(null));
+        result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) == 1", new EnhanceContext(null));
         assertEquals(true, result);
     }
 
     @Test
     public void testPropertyExpressionCompare() {
-        StandardContext context = new StandardContext(null);
+        EnhanceContext context = new EnhanceContext(null);
         Object result = SnEL.eval("T(java.lang.Integer).parseInt(${user.name:1}) > 1", context);
         assertEquals(false, result);
 

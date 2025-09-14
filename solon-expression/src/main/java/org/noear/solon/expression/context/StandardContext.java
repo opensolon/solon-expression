@@ -15,106 +15,23 @@
  */
 package org.noear.solon.expression.context;
 
-import org.noear.solon.expression.exception.EvaluationException;
-import org.noear.solon.expression.guidance.PropertiesGuidance;
-import org.noear.solon.expression.guidance.ReturnGuidance;
-import org.noear.solon.expression.guidance.TypeGuidance;
-import org.noear.solon.expression.guidance.TypeGuidanceUnsafety;
-import org.noear.solon.expression.snel.PropertyHolder;
-import org.noear.solon.expression.snel.ReflectionUtil;
-
-import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
 
 /**
  * 标准上下文
  *
  * @author noear
  * @since 3.2
+ * @deprecated 3.6 {@link EnhanceContext}
  */
-public class StandardContext implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
-    private final Object target;
-    private final boolean isMap;
-
-    private TypeGuidance typeGuidance = TypeGuidanceUnsafety.INSTANCE;
-    private Properties properties;
-    private boolean isReturnNull;
-
+@Deprecated
+public class StandardContext extends EnhanceContext {
     public StandardContext(Object target) {
-        this.target = target;
-        this.isMap = target instanceof Map;
+        super(target);
     }
 
-    public StandardContext properties(Properties properties) {
-        this.properties = properties;
-        return this;
-    }
-
-    public StandardContext typeGuidance(TypeGuidance typeGuidance) {
-        this.typeGuidance = typeGuidance;
-        return this;
-    }
-
-    public StandardContext isReturnNull(boolean isReturnNull) {
-        this.isReturnNull = isReturnNull;
-        return this;
-    }
-
-    private Object lastValue;
-
-    @Override
-    public Object apply(String name) {
-        if (target == null) {
-            return null;
-        }
-
-        if ("root".equals(name)) {
-            return target;
-        }
-
-        if ("this".equals(name)) {
-            if (lastValue == null) {
-                return target;
-            } else {
-                return lastValue;
-            }
-        }
-
-        if (isMap) {
-            lastValue = ((Map) target).get(name);
-        } else {
-            PropertyHolder tmp = ReflectionUtil.getProperty(target.getClass(), name);
-
-            try {
-                lastValue = tmp.getValue(target);
-            } catch (Throwable e) {
-                throw new EvaluationException("Failed to access property: " + name, e);
-            }
-        }
-
-        return lastValue;
-    }
-
-    //TypeGuidance
-    @Override
-    public Class<?> getType(String typeName) throws EvaluationException {
-        if (typeGuidance == null) {
-            throw new IllegalStateException("The current context is not supported: 'T(.)'");
-        } else {
-            return typeGuidance.getType(typeName);
-        }
-    }
-
-    //PropertiesGuidance
-    @Override
-    public Properties getProperties() {
-        return properties;
-    }
-
-    //ReturnGuidance
-    @Override
-    public boolean isReturnNull() {
-        return isReturnNull;
+    public StandardContext(Object target, Properties properties) {
+        super(target);
+        forProperties(properties);
     }
 }

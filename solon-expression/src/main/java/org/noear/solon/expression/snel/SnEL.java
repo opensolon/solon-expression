@@ -29,6 +29,9 @@ import java.util.function.Function;
  * @since 3.1
  */
 public interface SnEL {
+    public static final String KEY_PROPERTIES = "$properties";
+    public static final String KEY_IF_NULL_RETURN = "$is_null_return";
+
     /**
      * 解析（将文本解析为一个可评估的表达式结构树，可反向转换）
      */

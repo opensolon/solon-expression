@@ -72,7 +72,7 @@ public class TemplateFragment {
         int colonIdx = content.lastIndexOf(':');
 
         if (colonIdx < 0) {
-            propertyDef = "";
+            propertyDef = null;
             propertyKey = content;
         } else {
             propertyDef = content.substring(colonIdx + 1);

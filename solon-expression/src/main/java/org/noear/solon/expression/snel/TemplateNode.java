@@ -16,7 +16,6 @@
 package org.noear.solon.expression.snel;
 
 import org.noear.solon.expression.Expression;
-import org.noear.solon.expression.context.StandardContext;
 
 import java.util.List;
 import java.util.Properties;
@@ -27,8 +26,6 @@ import java.util.function.Function;
  * @since 3.1
  */
 public class TemplateNode implements Expression<String> {
-    public static final String KEY_PROPERTIES = "$properties";
-
     private final List<TemplateFragment> fragments;
     private TemplateFragment constantFragment;
 
@@ -46,6 +43,9 @@ public class TemplateNode implements Expression<String> {
         if (constantFragment != null) {
             return constantFragment.getContent();
         } else {
+
+            Boolean isNullReturn = (Boolean) context.apply(SnEL.KEY_IF_NULL_RETURN);
+
             StringBuilder result = new StringBuilder();
             for (TemplateFragment fragment : fragments) {
                 if (fragment.getMarker() == TemplateMarker.TEXT) {
@@ -56,13 +56,21 @@ public class TemplateNode implements Expression<String> {
                     Object value;
                     if (fragment.getMarker() == TemplateMarker.PROPERTIES) {
                         value = getProps(fragment, context);
+                        //属性表达式，无值为空（即不入值）
+                        if (value != null) {
+                            result.append(value);
+                        }
                     } else {
                         value = SnEL.eval(fragment.getContent(), context);
+                        result.append(value);
                     }
 
-                    result.append(value);
+                    if (isNullReturn != null && isNullReturn) {
+                        return null;
+                    }
                 }
             }
+
             return result.toString();
         }
     }
@@ -71,12 +79,8 @@ public class TemplateNode implements Expression<String> {
         //属性，可以传入或者
         Object props = null;
 
-        if (context instanceof StandardContext) {
-            props = ((StandardContext) context).properties();
-        }
-
         if (props == null) {
-            props = context.apply(KEY_PROPERTIES);
+            props = context.apply(SnEL.KEY_PROPERTIES);
         }
 
         if (props == null) {

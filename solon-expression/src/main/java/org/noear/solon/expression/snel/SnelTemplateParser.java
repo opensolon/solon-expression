@@ -36,7 +36,7 @@ import java.util.Map;
  * @since 3.1
  */
 public class SnelTemplateParser implements Parser<String> {
-    private static final SnelTemplateParser INSTANCE = new SnelTemplateParser(1000);
+    private static final SnelTemplateParser INSTANCE = new SnelTemplateParser(2000);
     private final Map<String, Expression<String>> exprCached;
 
     public SnelTemplateParser(int cahceCapacity) {

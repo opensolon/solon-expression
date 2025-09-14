@@ -18,6 +18,7 @@ package org.noear.solon.expression.context;
 import org.noear.solon.expression.exception.EvaluationException;
 import org.noear.solon.expression.snel.PropertyHolder;
 import org.noear.solon.expression.snel.ReflectionUtil;
+import org.noear.solon.expression.snel.SnEL;
 
 import java.util.Map;
 import java.util.Properties;
@@ -35,7 +36,7 @@ public class StandardContext implements Function<String, Object> {
     private final Properties properties;
 
     public StandardContext(Object target) {
-       this(target, null);
+        this(target, null);
     }
 
     public StandardContext(Object target, Properties properties) {
@@ -49,19 +50,18 @@ public class StandardContext implements Function<String, Object> {
         }
     }
 
-    /**
-     * 属性获取（用于模板表达式）
-     */
-    public Properties properties() {
-        return properties;
-    }
-
     private Object lastValue;
 
     @Override
     public Object apply(String name) {
         if (target == null) {
             return null;
+        }
+
+        if (properties != null) {
+            if (SnEL.KEY_PROPERTIES.equals(name)) {
+                return properties;
+            }
         }
 
         if ("root".equals(name)) {

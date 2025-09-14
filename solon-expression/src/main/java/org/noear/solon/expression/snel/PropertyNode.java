@@ -117,7 +117,11 @@ public class PropertyNode implements Expression {
 
     private Object getPropertyValue(Object target, String propName) {
         if (propertyCached == null) {
-            propertyCached = ReflectionUtil.getProperty(target.getClass(), propName);
+            if (target instanceof Class) {
+                propertyCached = ReflectionUtil.getProperty((Class<?>) target, propName);
+            } else {
+                propertyCached = ReflectionUtil.getProperty(target.getClass(), propName);
+            }
         }
 
         try {

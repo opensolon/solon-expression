@@ -22,41 +22,29 @@ package org.noear.solon.expression.snel;
  * @since 3.1
  */
 public enum ComparisonOp {
-    lt("<", 10),  // <
-    lte("<=", 11), // <=
-    gt(">", 12),  // >
-    gte(">=", 13), // >=
-
-    eq("==", 20),  // ==
-    neq("!=", 21), // !=
-
-    lk("LIKE", 30),  // like
-    nlk("NOT LIKE", 31), // not like
-
-    in("IN", 40),  // in
-    nin("NO IN", 41), // not in
+    lt("<"),  // <
+    lte("<="), // <=
+    gt(">"),  // >
+    gte(">="), // >=
+    eq("=="),  // ==
+    neq("!="), // !=
+    lk("LIKE"),  // like
+    nlk("NOT LIKE"), // not like
+    in("IN"),  // in
+    nin("NO IN"), // not in
     ;
 
-    ComparisonOp(String code, int index) {
+    ComparisonOp(String code) {
         this.code = code;
-        this.index = index;
     }
 
     private final String code;
-    private final int index;
 
     /**
      * 代号
      */
     public String getCode() {
         return code;
-    }
-
-    /**
-     * 序位
-     */
-    public int getIndex() {
-        return index;
     }
 
     /**

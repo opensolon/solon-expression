@@ -293,8 +293,14 @@ public class SnelEvaluateParser implements Parser {
         state.skipWhitespace();
         Expression expr;
 
-        // 检查是否是 ${} 属性表达式
-        if (state.getCurrentChar() == '$' && state.peekNextChar() == '{') {
+
+        if (eat(state, "T(")) {
+            // 检查是否是 T(...) 类型表达式
+            String className = parseClassName(state);
+            require(state, ')', "Expected ')' after class name in T(...) expression");
+            expr = new TypeExpressionNode(className);
+        } else if  (state.getCurrentChar() == '$' && state.peekNextChar() == '{') {
+            // 检查是否是 ${} 属性表达式
             String propertyExpr = parsePropertyExpression(state);
             expr = parsePropertyExpression(propertyExpr);
         } else if (eat(state, '(')) {
@@ -318,6 +324,18 @@ public class SnelEvaluateParser implements Parser {
         }
 
         return parsePostfix(state, expr);
+    }
+
+    /**
+     * 解析类名（允许点分隔的标识符）
+     */
+    private String parseClassName(ParserState state) {
+        StringBuilder sb = new StringBuilder();
+        while (state.isIdentifier() || state.getCurrentChar() == '.') {
+            sb.append((char) state.getCurrentChar());
+            state.nextChar();
+        }
+        return sb.toString();
     }
 
     /**

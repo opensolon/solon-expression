@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author noear
  * @since 3.1
  */
-public class SnelSafeTest {
+public class SnelElvisTest {
 
     // 测试数据
     private Map<String, Object> createTestContext() {
@@ -305,6 +305,36 @@ public class SnelSafeTest {
 
         result = SnEL.eval("${user.name:1} == 1");
         assertEquals(true, result);
+    }
+
+    @Test
+    public void testPropertyExpressionCompare(){
+        Object result  = SnEL.eval("${user.name:1} > 1");
+        assertEquals(false, result);
+
+        result = SnEL.eval("${user.name:1} >= 1");
+        assertEquals(true, result);
+
+        result = SnEL.eval("${user.name:2} > 1");
+        assertEquals(true, result);
+
+        result = SnEL.eval("${user.name:2} >= 1");
+        assertEquals(true, result);
+
+        /// /////////////
+
+
+        result  = SnEL.eval("${user.name:1} < 1");
+        assertEquals(false, result);
+
+        result = SnEL.eval("${user.name:1} <= 1");
+        assertEquals(true, result);
+
+        result = SnEL.eval("${user.name:2} < 1");
+        assertEquals(false, result);
+
+        result = SnEL.eval("${user.name:2} <= 1");
+        assertEquals(false, result);
     }
 
     // 23. 测试安全导航数组访问

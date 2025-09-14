@@ -31,7 +31,8 @@ public class ComparisonNode implements Expression<Boolean> {
     private ComparisonOp operator; // 比较运算符，如 ">", "<", "==", "!="
     private Expression left;
     private Expression right;
-    private boolean hasTemplateNode;
+    private boolean leftIsTemplate;
+    private boolean rightIsTemplate;
 
     /**
      * 获取操作符
@@ -58,7 +59,8 @@ public class ComparisonNode implements Expression<Boolean> {
         this.operator = operator;
         this.left = left;
         this.right = right;
-        this.hasTemplateNode = (left instanceof TemplateNode) || (right instanceof TemplateNode);
+        this.leftIsTemplate = (left instanceof TemplateNode);
+        this.rightIsTemplate = (right instanceof TemplateNode);
     }
 
     @Override
@@ -68,7 +70,7 @@ public class ComparisonNode implements Expression<Boolean> {
 
         if (operator == ComparisonOp.eq) {
             // ==
-            if (hasTemplateNode) {
+            if (leftIsTemplate || rightIsTemplate) {
                 return Objects.equals(String.valueOf(leftValue), String.valueOf(rightValue));
             } else if (leftValue instanceof Number && rightValue instanceof Number) {
                 return ((Number) leftValue).doubleValue() == ((Number) rightValue).doubleValue();
@@ -77,7 +79,7 @@ public class ComparisonNode implements Expression<Boolean> {
             }
         } else if (operator == ComparisonOp.neq) {
             // !=
-            if (hasTemplateNode) {
+            if (leftIsTemplate || rightIsTemplate) {
                 return Objects.equals(String.valueOf(leftValue), String.valueOf(rightValue)) == false;
             } else if (leftValue instanceof Number && rightValue instanceof Number) {
                 return ((Number) leftValue).doubleValue() != ((Number) rightValue).doubleValue();
@@ -99,6 +101,17 @@ public class ComparisonNode implements Expression<Boolean> {
         } else {
             if (leftValue == null || rightValue == null) {
                 return false;
+            }
+
+            if (operator.getIndex() < ComparisonOp.eq.getIndex()) {
+                //模板表达式的值，转为字符串
+                if (leftIsTemplate) {
+                    leftValue = Double.parseDouble(String.valueOf(leftValue));
+                }
+
+                if (rightIsTemplate) {
+                    rightValue = Double.parseDouble(String.valueOf(rightValue));
+                }
             }
 
             switch (operator) {

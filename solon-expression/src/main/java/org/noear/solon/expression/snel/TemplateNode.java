@@ -85,7 +85,7 @@ public class TemplateNode implements Expression<String> {
                         result.append(value);
                     }
 
-                    if (isReturnNull) {
+                    if (isReturnNull && value == null) {
                         return null;
                     }
                 }

@@ -47,9 +47,24 @@ public class TemplateNode implements Expression<String> {
         } else {
 
             boolean isReturnNull = false;
+            boolean allowPropertyDefault = true;
+            Object propsObject = null;
+
             if (context instanceof ReturnGuidance) {
                 isReturnNull = ((ReturnGuidance) context).isReturnNull();
             }
+
+            if (context instanceof PropertiesGuidance) {
+                PropertiesGuidance tmp = ((PropertiesGuidance) context);
+                propsObject = tmp.getProperties();
+                allowPropertyDefault = tmp.allowPropertyDefault();
+            }
+
+            if (propsObject == null) {
+                propsObject = context;
+            }
+
+            /// ///////////////
 
             StringBuilder result = new StringBuilder();
             for (TemplateFragment fragment : fragments) {
@@ -60,7 +75,7 @@ public class TemplateNode implements Expression<String> {
                     // 如果是变量片段，从上下文中获取值
                     Object value;
                     if (fragment.getMarker() == TemplateMarker.PROPERTIES) {
-                        value = getProps(fragment, context);
+                        value = getProps(fragment, propsObject, allowPropertyDefault);
                         //属性表达式，无值为空（即不入值）
                         if (value != null) {
                             result.append(value);
@@ -80,31 +95,21 @@ public class TemplateNode implements Expression<String> {
         }
     }
 
-    private String getProps(TemplateFragment expr, Function context) {
-        //属性，可以传入或者
-        Object props = null;
-
-        if (context instanceof PropertiesGuidance) {
-            props = ((PropertiesGuidance) context).getProperties();
-        }
-
-        if (props == null) {
-            props = context;
-        }
+    private String getProps(TemplateFragment expr, Object propsObject, boolean allowPropertyDefault) {
 
         String value = null;
-        if (props instanceof Properties) {
-            value = ((Properties) props).getProperty(expr.getPropertyKey());
-        } else if (props instanceof Function) {
-            Object tmp = ((Function) props).apply(expr.getPropertyKey());
+        if (propsObject instanceof Properties) {
+            value = ((Properties) propsObject).getProperty(expr.getPropertyKey());
+        } else if (propsObject instanceof Function) {
+            Object tmp = ((Function) propsObject).apply(expr.getPropertyKey());
             if (tmp != null) {
                 value = String.valueOf(tmp);
             }
         } else {
-            throw new IllegalArgumentException("Unsupported props type: " + props.getClass());
+            throw new IllegalArgumentException("Unsupported properties type: " + propsObject.getClass());
         }
 
-        if (value == null) {
+        if (value == null && allowPropertyDefault) {
             return expr.getPropertyDef();
         } else {
             return value;

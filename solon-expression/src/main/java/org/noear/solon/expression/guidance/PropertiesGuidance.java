@@ -28,4 +28,9 @@ public interface PropertiesGuidance {
      * 获取属性
      */
     Properties getProperties();
+
+    /**
+     * 允许属性默认值
+     */
+    boolean allowPropertyDefault();
 }

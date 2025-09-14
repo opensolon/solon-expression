@@ -40,6 +40,7 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
 
     private TypeGuidance typeGuidance = TypeGuidanceUnsafety.INSTANCE;
     private Properties properties;
+    private boolean allowPropertyDefault = true;
     private boolean isReturnNull;
 
     public EnhanceContext(Object target) {
@@ -49,6 +50,11 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
 
     public EnhanceContext forProperties(Properties properties) {
         this.properties = properties;
+        return this;
+    }
+
+    public EnhanceContext forAllowPropertyDefault(boolean allowPropertyDefault) {
+        this.allowPropertyDefault = allowPropertyDefault;
         return this;
     }
 
@@ -111,6 +117,11 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
     @Override
     public Properties getProperties() {
         return properties;
+    }
+
+    @Override
+    public boolean allowPropertyDefault() {
+        return allowPropertyDefault;
     }
 
     //ReturnGuidance

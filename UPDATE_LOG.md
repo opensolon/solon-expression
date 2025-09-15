@@ -1,6 +1,13 @@
+### v3.6.0
+
+* 新增 Guidance 控制体系
+* 添加 EnhanceContext 替代 StandardContext（后者标为弃用）
+* 添加 `T(className)` 类型表达式
+
 ### v3.5.2
 
-* 添加 '${}' 和 '?:' 表达式支持
+* 添加 `${}` 属性求值表达式支持
+* 添加 `?:` Elvis 表达式支持
 
 ### v3.5.0
 

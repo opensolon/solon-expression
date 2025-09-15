@@ -42,33 +42,45 @@ public class TemplateNode implements Expression<String> {
 
     @Override
     public String eval(Function context) {
+        boolean allowReturnNull = false;
+        boolean allowPropertyDefault = true;
+        boolean allowPropertyNesting = false;
+        boolean allowTextAsProperty = false;
+
+        Object propsObject = null;
+
+        if (context instanceof ReturnGuidance) {
+            allowReturnNull = ((ReturnGuidance) context).allowReturnNull();
+        }
+
+        if (context instanceof PropertiesGuidance) {
+            PropertiesGuidance tmp = ((PropertiesGuidance) context);
+            propsObject = tmp.getProperties();
+            allowPropertyDefault = tmp.allowPropertyDefault();
+            allowPropertyNesting = tmp.allowPropertyNesting();
+            allowTextAsProperty = tmp.allowTextAsProperty();
+        }
+
+        if (propsObject == null) {
+            propsObject = context;
+        }
+
+        /// ///////////////
+
         if (constantFragment != null) {
-            return constantFragment.getContent();
+            if (allowTextAsProperty) {
+                //如果文本作为属性表达式用
+                String value = evalProps(constantFragment, propsObject, allowPropertyDefault, allowPropertyNesting, context, null);
+
+                if (allowReturnNull && value == null) {
+                    return null;
+                } else {
+                    return value;
+                }
+            }else {
+                return constantFragment.getContent();
+            }
         } else {
-            boolean allowReturnNull = false;
-            boolean allowPropertyDefault = true;
-            boolean allowPropertyNesting = false;
-            boolean allowTextAsProperty = false;
-
-            Object propsObject = null;
-
-            if (context instanceof ReturnGuidance) {
-                allowReturnNull = ((ReturnGuidance) context).allowReturnNull();
-            }
-
-            if (context instanceof PropertiesGuidance) {
-                PropertiesGuidance tmp = ((PropertiesGuidance) context);
-                propsObject = tmp.getProperties();
-                allowPropertyDefault = tmp.allowPropertyDefault();
-                allowPropertyNesting = tmp.allowPropertyNesting();
-                allowTextAsProperty = tmp.allowTextAsProperty();
-            }
-
-            if (propsObject == null) {
-                propsObject = context;
-            }
-
-            /// ///////////////
 
             StringBuilder result = new StringBuilder();
             for (TemplateFragment fragment : fragments) {
@@ -112,7 +124,7 @@ public class TemplateNode implements Expression<String> {
             value = SnEL.evalTmpl((String) value, context);
         }
 
-        if (value != null) {
+        if (value != null && result != null) {
             //属性表达式，无值为空（即不入值）
             result.append(value);
         }

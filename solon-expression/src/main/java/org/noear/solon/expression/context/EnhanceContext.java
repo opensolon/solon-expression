@@ -34,7 +34,7 @@ import java.util.function.Function;
  * @since 3.2
  * @since 3.6
  */
-public class EnhanceContext<Slf extends EnhanceContext, T extends Object> implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
+public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
     protected final T target;
     protected final boolean isMap;
 
@@ -124,6 +124,16 @@ public class EnhanceContext<Slf extends EnhanceContext, T extends Object> implem
         } else {
             return typeGuidance.getType(typeName);
         }
+    }
+
+    public T getTarget() {
+        //方便单测用
+        return target;
+    }
+
+    public TypeGuidance getTypeGuidance() {
+        //方便单测用
+        return typeGuidance;
     }
 
     //PropertiesGuidance

@@ -78,7 +78,7 @@ public class SnTmplPropsTest {
 
     @Test
     public void case23() {
-        EnhanceContext context = new EnhanceContext(null).forReturnNull(true);
+        EnhanceContext context = new EnhanceContext(null).forAllowReturnNull(true);
 
         String result = SnEL.evalTmpl("${user}", context);
         assertNull(result);

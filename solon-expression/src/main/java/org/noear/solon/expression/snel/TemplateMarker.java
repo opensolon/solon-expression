@@ -22,7 +22,7 @@ package org.noear.solon.expression.snel;
  * @since 3.5
  */
 public enum TemplateMarker {
-    EXPRESSION,
-    PROPERTIES,
     TEXT,
+    PROPERTIES,
+    EXPRESSION,
 }

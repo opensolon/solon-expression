@@ -34,44 +34,51 @@ import java.util.function.Function;
  * @since 3.2
  * @since 3.6
  */
-public class EnhanceContext implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
-    private final Object target;
-    private final boolean isMap;
+public class EnhanceContext<Slf extends EnhanceContext, T extends Object> implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
+    protected final T target;
+    protected final boolean isMap;
 
     private TypeGuidance typeGuidance = TypeGuidanceUnsafety.INSTANCE;
     private Properties properties;
+
     private boolean allowPropertyDefault = true;
     private boolean allowPropertyNesting = false;
-    private boolean isReturnNull;
+    private boolean allowTextAsProperty = false;
+    private boolean allowReturnNull = false;
 
-    public EnhanceContext(Object target) {
+    public EnhanceContext(T target) {
         this.target = target;
         this.isMap = target instanceof Map;
     }
 
-    public EnhanceContext forProperties(Properties properties) {
+    public Slf forProperties(Properties properties) {
         this.properties = properties;
-        return this;
+        return (Slf) this;
     }
 
-    public EnhanceContext forAllowPropertyDefault(boolean allowPropertyDefault) {
+    public Slf forAllowPropertyDefault(boolean allowPropertyDefault) {
         this.allowPropertyDefault = allowPropertyDefault;
-        return this;
+        return (Slf) this;
     }
 
-    public EnhanceContext forAllowPropertyNesting(boolean allowPropertyNesting) {
+    public Slf forAllowPropertyNesting(boolean allowPropertyNesting) {
         this.allowPropertyNesting = allowPropertyNesting;
-        return this;
+        return (Slf) this;
     }
 
-    public EnhanceContext forTypeGuidance(TypeGuidance typeGuidance) {
+    public Slf forAllowTextAsProperty(boolean allowTextAsProperty) {
+        this.allowTextAsProperty = allowTextAsProperty;
+        return (Slf) this;
+    }
+
+    public Slf forAllowReturnNull(boolean allowReturnNull) {
+        this.allowReturnNull = allowReturnNull;
+        return (Slf) this;
+    }
+
+    public Slf forTypeGuidance(TypeGuidance typeGuidance) {
         this.typeGuidance = typeGuidance;
-        return this;
-    }
-
-    public EnhanceContext forReturnNull(boolean isReturnNull) {
-        this.isReturnNull = isReturnNull;
-        return this;
+        return (Slf) this;
     }
 
     private Object lastValue;
@@ -135,9 +142,14 @@ public class EnhanceContext implements Function<String, Object>, TypeGuidance, P
         return allowPropertyNesting;
     }
 
+    @Override
+    public boolean allowTextAsProperty() {
+        return allowTextAsProperty;
+    }
+
     //ReturnGuidance
     @Override
-    public boolean isReturnNull() {
-        return isReturnNull;
+    public boolean allowReturnNull() {
+        return allowReturnNull;
     }
 }

@@ -38,4 +38,9 @@ public interface PropertiesGuidance {
      * 允许属性嵌套
      */
     boolean allowPropertyNesting();
+
+    /**
+     * 允许文本作为属性表达式用
+     */
+    boolean allowTextAsProperty();
 }

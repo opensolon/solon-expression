@@ -64,7 +64,7 @@ public class TemplateFragment {
     }
 
     private void resolvePropertyName() {
-        if (marker != TemplateMarker.PROPERTIES) {
+        if (marker == TemplateMarker.EXPRESSION) {
             return;
         }
 

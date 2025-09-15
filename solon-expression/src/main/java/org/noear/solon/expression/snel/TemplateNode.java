@@ -45,14 +45,15 @@ public class TemplateNode implements Expression<String> {
         if (constantFragment != null) {
             return constantFragment.getContent();
         } else {
-
-            boolean isReturnNull = false;
+            boolean allowReturnNull = false;
             boolean allowPropertyDefault = true;
             boolean allowPropertyNesting = false;
+            boolean allowTextAsProperty = false;
+
             Object propsObject = null;
 
             if (context instanceof ReturnGuidance) {
-                isReturnNull = ((ReturnGuidance) context).isReturnNull();
+                allowReturnNull = ((ReturnGuidance) context).allowReturnNull();
             }
 
             if (context instanceof PropertiesGuidance) {
@@ -60,6 +61,7 @@ public class TemplateNode implements Expression<String> {
                 propsObject = tmp.getProperties();
                 allowPropertyDefault = tmp.allowPropertyDefault();
                 allowPropertyNesting = tmp.allowPropertyNesting();
+                allowTextAsProperty = tmp.allowTextAsProperty();
             }
 
             if (propsObject == null) {
@@ -71,29 +73,28 @@ public class TemplateNode implements Expression<String> {
             StringBuilder result = new StringBuilder();
             for (TemplateFragment fragment : fragments) {
                 if (fragment.getMarker() == TemplateMarker.TEXT) {
-                    // 如果是文本片段，直接追加
-                    result.append(fragment.getContent());
+                    if (allowTextAsProperty) {
+                        //如果文本作为属性表达式用
+                        String value = evalProps(fragment, propsObject, allowPropertyDefault, allowPropertyNesting, context, result);
+
+                        if (allowReturnNull && value == null) {
+                            return null;
+                        }
+                    } else {
+                        // 如果是文本片段，直接追加
+                        result.append(fragment.getContent());
+                    }
                 } else {
                     // 如果是变量片段，从上下文中获取值
                     Object value;
                     if (fragment.getMarker() == TemplateMarker.PROPERTIES) {
-                        value = getProps(fragment, propsObject, allowPropertyDefault);
-
-                        if (value != null && allowPropertyNesting) {
-                            //模板里可能会（动态）再套模型
-                            value = SnEL.evalTmpl((String) value, context);
-                        }
-
-                        if (value != null) {
-                            //属性表达式，无值为空（即不入值）
-                            result.append(value);
-                        }
+                        value = evalProps(fragment, propsObject, allowPropertyDefault, allowPropertyNesting, context, result);
                     } else {
                         value = SnEL.eval(fragment.getContent(), context);
                         result.append(value);
                     }
 
-                    if (isReturnNull && value == null) {
+                    if (allowReturnNull && value == null) {
                         return null;
                     }
                 }
@@ -101,6 +102,22 @@ public class TemplateNode implements Expression<String> {
 
             return result.toString();
         }
+    }
+
+    private String evalProps(TemplateFragment fragment, Object propsObject, boolean allowPropertyDefault, boolean allowPropertyNesting, Function context, StringBuilder result) {
+        String value = getProps(fragment, propsObject, allowPropertyDefault);
+
+        if (value != null && allowPropertyNesting) {
+            //模板里可能会（动态）再套模型
+            value = SnEL.evalTmpl((String) value, context);
+        }
+
+        if (value != null) {
+            //属性表达式，无值为空（即不入值）
+            result.append(value);
+        }
+
+        return value;
     }
 
     private String getProps(TemplateFragment expr, Object propsObject, boolean allowPropertyDefault) {

@@ -23,7 +23,7 @@ package org.noear.solon.expression.guidance;
  */
 public interface ReturnGuidance {
     /**
-     * 是否返回 null
+     * 允许返回 null
      */
-    boolean isReturnNull();
+    boolean allowReturnNull();
 }

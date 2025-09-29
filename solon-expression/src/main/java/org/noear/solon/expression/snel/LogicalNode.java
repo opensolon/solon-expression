@@ -60,8 +60,8 @@ public class LogicalNode implements Expression<Boolean> {
 
     @Override
     public Boolean eval(Function context) {
-        boolean leftValue = getBoolean(left, context);
-        boolean rightValue = getBoolean(right, context);
+        boolean leftValue = getOptimizeValue(left, context);
+        boolean rightValue = getOptimizeValue(right, context);
 
         if (operator == LogicalOp.AND) {
             return leftValue && rightValue;
@@ -72,7 +72,10 @@ public class LogicalNode implements Expression<Boolean> {
         }
     }
 
-    protected boolean getBoolean(Expression expression, Function context) {
+    /**
+     * 获取优化值
+     */
+    protected boolean getOptimizeValue(Expression expression, Function context) {
         if (expression == null) {
             return false;
         }
@@ -83,8 +86,11 @@ public class LogicalNode implements Expression<Boolean> {
             //布尔
             return (Boolean) value;
         } else if (value instanceof String) {
-            //非空字符串
+            //有字符串
             return ((String) value).length() > 0;
+        } else if (value instanceof Number) {
+            //大于0
+            return ((Number) value).intValue() > 0;
         } else {
             //非null对象
             return value != null;

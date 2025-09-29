@@ -16,6 +16,8 @@ public class PropertiesTest {
     @Test
     public void case1() {
         assert testExpression("${yyy.enable}", Utils.asMap("yyy.enable", "true"));
+        assert testExpression("${yyy.enable}", Utils.asMap()) == false;
+        assert testExpression("${yyy.enable} == false", Utils.asMap());
         assert testExpression("${yyy.enable} == 'true'", Utils.asMap("yyy.enable", "true"));
     }
 

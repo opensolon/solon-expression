@@ -70,17 +70,9 @@ public class ComparisonNode implements Expression<Boolean> {
         Object rightValue = right.eval(context);
 
         if (leftIsTemplate) {
-            if (rightValue instanceof Boolean) {
-                leftValue = getBoolean((String) leftValue, false);
-            } else if (rightValue instanceof Number) {
-                leftValue = getNumber((String) leftValue, 0L);
-            }
+            leftValue = getOptimizeValue(leftValue, rightValue);
         } else if (rightIsTemplate) {
-            if (leftValue instanceof Boolean) {
-                rightValue = getBoolean((String) rightValue, false);
-            } else if (leftValue instanceof Number) {
-                rightValue = getNumber((String) rightValue, 0L);
-            }
+            rightValue = getOptimizeValue(rightValue, leftValue);
         }
 
         if (operator == ComparisonOp.eq) {
@@ -131,6 +123,21 @@ public class ComparisonNode implements Expression<Boolean> {
                     throw new IllegalArgumentException("Unknown operator: " + operator);
             }
         }
+    }
+
+    /**
+     * 获取优化值
+     */
+    protected Object getOptimizeValue(Object val, Object ref) {
+        if (val instanceof String) {
+            if (ref instanceof Boolean) {
+                return getBoolean((String) val, false);
+            } else if (ref instanceof Number) {
+                return getNumber((String) val, 0L);
+            }
+        }
+
+        return val;
     }
 
     protected boolean getBoolean(String value, boolean defaultValue) {

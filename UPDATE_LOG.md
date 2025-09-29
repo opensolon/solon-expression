@@ -3,6 +3,17 @@
 * 新增 Guidance 控制体系
 * 添加 EnhanceContext 替代 StandardContext（后者标为弃用）
 * 添加 `T(className)` 类型表达式
+* 优化 ComparisonNode 处理，表达式可按需转换类型
+* 优化 LogicalNode 处理，非空字符串，非 null 对象即为 true
+
+
+示例：
+
+```kotlin
+fun main(){
+    SnEL.evel("${yyy.enable} == false", Utils.asMap());
+}
+```
 
 ### v3.5.2
 

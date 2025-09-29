@@ -31,6 +31,8 @@ public class ComparisonNode implements Expression<Boolean> {
     private ComparisonOp operator; // 比较运算符，如 ">", "<", "=="
     private Expression left;
     private Expression right;
+    private boolean leftIsTemplate;
+    private boolean rightIsTemplate;
 
     /**
      * 获取操作符
@@ -57,12 +59,29 @@ public class ComparisonNode implements Expression<Boolean> {
         this.operator = operator;
         this.left = left;
         this.right = right;
+
+        this.leftIsTemplate = left instanceof TemplateNode;
+        this.rightIsTemplate = right instanceof TemplateNode;
     }
 
     @Override
     public Boolean eval(Function context) {
         Object leftValue = left.eval(context);
         Object rightValue = right.eval(context);
+
+        if (leftIsTemplate) {
+            if (rightValue instanceof Boolean) {
+                leftValue = getBoolean((String) leftValue, false);
+            } else if (rightValue instanceof Number) {
+                leftValue = getNumber((String) leftValue, 0L);
+            }
+        } else if (rightIsTemplate) {
+            if (leftValue instanceof Boolean) {
+                rightValue = getBoolean((String) rightValue, false);
+            } else if (leftValue instanceof Number) {
+                rightValue = getNumber((String) rightValue, 0L);
+            }
+        }
 
         if (operator == ComparisonOp.eq) {
             // ==
@@ -112,6 +131,22 @@ public class ComparisonNode implements Expression<Boolean> {
                     throw new IllegalArgumentException("Unknown operator: " + operator);
             }
         }
+    }
+
+    protected boolean getBoolean(String value, boolean defaultValue) {
+        if (value == null && value.length() == 0) {
+            return defaultValue;
+        }
+
+        return Boolean.parseBoolean(value);
+    }
+
+    protected Number getNumber(String value, Number defaultValue) {
+        if (value == null && value.length() == 0) {
+            return defaultValue;
+        }
+
+        return Double.parseDouble(value);
     }
 
     @Override

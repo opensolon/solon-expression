@@ -38,6 +38,19 @@ public class PropertiesTest {
         assert testExpression("${yyy.enable} && ${zzz.enable:true} == 'false'", Utils.asMap("yyy.enable", "1", "zzz.enable", "false")) == true;
     }
 
+    @Test
+    public void case4() {
+        assert testExpression("${yyy.enable:true} == true", Utils.asMap());
+        assert testExpression("${yyy.enable:true} != true", Utils.asMap()) == false;
+    }
+
+    @Test
+    public void case5() {
+        assert testExpression("${yyy:1} > 0", Utils.asMap());
+        assert testExpression("${yyy:2} < 1", Utils.asMap()) == false;
+        assert testExpression("${yyy:2} < 1", Utils.asMap("yyy", "0"));
+    }
+
 
     private static boolean testExpression(String expr, Map context) {
         Object val = SnEL.eval(expr, context);

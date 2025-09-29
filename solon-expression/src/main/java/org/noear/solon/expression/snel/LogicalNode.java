@@ -60,20 +60,8 @@ public class LogicalNode implements Expression<Boolean> {
 
     @Override
     public Boolean eval(Function context) {
-        Boolean leftValue = (Boolean) left.eval(context);
-
-        if (leftValue == null) {
-            throw new EvaluationException("Logical left value is null");
-        }
-
-        Boolean rightValue = null;
-        if (right != null) {
-            rightValue = (Boolean) right.eval(context);
-
-            if (rightValue == null) {
-                throw new EvaluationException("Logical right value is null");
-            }
-        }
+        boolean leftValue = getBoolean(left, context);
+        boolean rightValue = getBoolean(right, context);
 
         if (operator == LogicalOp.AND) {
             return leftValue && rightValue;
@@ -81,6 +69,25 @@ public class LogicalNode implements Expression<Boolean> {
             return leftValue || rightValue;
         } else {
             return leftValue == false;
+        }
+    }
+
+    protected boolean getBoolean(Expression expression, Function context) {
+        if (expression == null) {
+            return false;
+        }
+
+        Object value = expression.eval(context);
+
+        if (value instanceof Boolean) {
+            //布尔
+            return (Boolean) value;
+        } else if (value instanceof String) {
+            //非空字符串
+            return ((String) value).length() > 0;
+        } else {
+            //非null对象
+            return value != null;
         }
     }
 

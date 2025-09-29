@@ -10,7 +10,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-public class SnTmplPropsTest {
+public class SnTmplPropertiesTest {
     @Test
     public void case11() {
         String template = "Hello, ${user.name}!";

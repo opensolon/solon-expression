@@ -135,7 +135,7 @@ public class EnhanceContextSnELTest {
                 .forAllowTextAsProperty(true);
 
         // 文本作为属性表达式
-        Object result = SnEL.evalTmpl("text", context);
+        Object result = SnEL.eval("${text}", context);
         assertEquals("property_value", result);
     }
 

@@ -120,7 +120,7 @@ public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implem
     @Override
     public Class<?> getType(String typeName) throws EvaluationException {
         if (typeGuidance == null) {
-            throw new IllegalStateException("The current context is not supported: 'T(.)'");
+            throw new EvaluationException("The current context is not supported: 'T(.)'");
         } else {
             return typeGuidance.getType(typeName);
         }

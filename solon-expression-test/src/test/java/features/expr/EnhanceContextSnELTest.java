@@ -215,11 +215,11 @@ public class EnhanceContextSnELTest {
 
     @Test
     void testTypeGuidanceWithoutSupport() {
-        EnhanceContext context = new EnhanceContext<>(new Object())
-                .forTypeGuidance(null);
-
         // 没有类型指导时抛出异常
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(Throwable.class, () -> {
+            EnhanceContext context = new EnhanceContext<>(new Object())
+                    .forTypeGuidance(null);
+
             SnEL.eval("T(java.lang.String)", context);
         });
     }

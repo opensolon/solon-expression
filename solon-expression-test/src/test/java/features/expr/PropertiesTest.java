@@ -53,6 +53,18 @@ public class PropertiesTest {
         assert testExpression("${yyy:2} < 1", Utils.asMap("yyy", "0"));
     }
 
+    @Test
+    public void case6() {
+        assert testExpression("${yyy:1} * 3", Utils.asMap());
+        assert testExpression("${yyy:2} / 1", Utils.asMap());
+        assert testExpression("(${yyy:2} + 1) == 1", Utils.asMap("yyy", "0"));
+    }
+
+    @Test
+    public void case7() {
+        assert testExpression("${yyy:1} IN ['1','2','3']", Utils.asMap());
+        assert testExpression("${yyy:1} NOT IN ['1','2','3']", Utils.asMap()) == false;
+    }
 
     private static boolean testExpression(String expr, Map context) {
         Object val = SnEL.eval(expr, context);

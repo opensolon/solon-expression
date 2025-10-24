@@ -216,12 +216,18 @@ public class EnhanceContextSnELTest {
     @Test
     void testTypeGuidanceWithoutSupport() {
         // 没有类型指导时抛出异常
-        assertThrows(Throwable.class, () -> {
+        Throwable err = null;
+
+        try {
             EnhanceContext context = new EnhanceContext<>(new Object())
                     .forTypeGuidance(null);
 
-            SnEL.eval("T(java.lang.String)", context);
-        });
+            SnEL.eval("T(java.lang.String)", context, false);
+        } catch (Throwable e) {
+            err = e;
+        }
+
+        assert err != null;
     }
 
     // 测试对象属性访问

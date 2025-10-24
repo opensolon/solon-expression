@@ -37,12 +37,10 @@ public class TypeNode implements Expression<Class<?>> {
     @Override
     public Class<?> eval(Function context) {
         if (type == null) {
-            if (type == null) {
-                if (context instanceof TypeGuidance) {
-                    type = ((TypeGuidance) context).getType(className);
-                } else {
-                    throw new IllegalStateException("The current context is not supported: 'T(.)'");
-                }
+            if (context instanceof TypeGuidance) {
+                type = ((TypeGuidance) context).getType(className);
+            } else {
+                throw new IllegalStateException("The current context is not supported: 'T(.)'");
             }
         }
 

@@ -60,12 +60,9 @@ public class ArithmeticNode implements Expression {
             }
         }
 
-        if (leftValue == null) {
-            throw new EvaluationException("Arithmetic left value is null");
-        }
-
-        if (rightValue == null) {
-            throw new EvaluationException("Arithmetic right value is null");
+        if (leftValue == null || rightValue == null) {
+            throw new EvaluationException("Unsupported operation" + toString() + ": " +
+                    leftValue + " " + operator.getCode() + " " + rightValue);
         }
 
         // 动态分派数值计算逻辑

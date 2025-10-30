@@ -93,13 +93,13 @@ public class MethodNode implements Expression {
             }
 
             // 查找方法（ReflectionUtil 会自动处理可变参数）
-            Method method = methodUtil.getMethod(targetClass, methodName, argTypes);
+            Method method = ReflectionUtil.getInstance().getMethod(targetClass, methodName, argTypes);
             if (method == null) {
                 throw new EvaluationException("Method not found: " + methodName);
             }
 
             // 准备调用参数（ReflectionUtil 处理可变参数）
-            Object[] invokeArgs = methodUtil.prepareInvokeArgs(method, argValues);
+            Object[] invokeArgs = ReflectionUtil.getInstance().prepareInvokeArgs(method, argValues);
 
             // 调用方法
             if (targetValue instanceof Class<?>) {
@@ -122,24 +122,6 @@ public class MethodNode implements Expression {
             return PRIMITIVE_WRAPPER_MAP.get(clazz);
         }
         return clazz;
-    }
-
-    private static final ReflectionUtil methodUtil = new ReflectionUtil();
-
-
-    private Method methodCached;
-
-    private Method findMethod(Class<?> clazz, String methodName, Object[] argValues) {
-        if (methodCached == null) {
-            Class<?>[] argTypes = new Class<?>[argValues.length];
-            for (int i = 0; i < argValues.length; i++) {
-                argTypes[i] = getEffectiveClass(argValues[i]);
-            }
-
-            methodCached = methodUtil.getMethod(clazz, methodName, argTypes);
-        }
-
-        return methodCached;
     }
 
     @Override

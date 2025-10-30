@@ -104,7 +104,7 @@ public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implem
         if (isMap) {
             lastValue = ((Map) target).get(name);
         } else {
-            PropertyHolder tmp = ReflectionUtil.getProperty(target.getClass(), name);
+            PropertyHolder tmp = ReflectionUtil.getInstance().getProperty(target.getClass(), name);
 
             try {
                 lastValue = tmp.getValue(target);

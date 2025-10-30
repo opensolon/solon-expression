@@ -45,6 +45,12 @@ public class ReflectionUtil {
         // 可以添加更多的基本类型和包装类型映射
     }
 
+    private static ReflectionUtil instance = new ReflectionUtil();
+
+    public static ReflectionUtil getInstance() {
+        return instance;
+    }
+
     private final Map<MethodKey, Method> cache = new ConcurrentHashMap<>();
     private final Map<Class<?>, Method[]> methodsCache = new ConcurrentHashMap<>();
 
@@ -194,13 +200,13 @@ public class ReflectionUtil {
 
 
     /// //////////////////////////////
-    private static final Map<String, PropertyHolder> PROPERTY_CACHE = new ConcurrentHashMap<>();
+    private  final Map<String, PropertyHolder> PROPERTY_CACHE = new ConcurrentHashMap<>();
 
 
     /**
      * 获取属性
      */
-    public static PropertyHolder getProperty(Class<?> clazz, String propName) {
+    public  PropertyHolder getProperty(Class<?> clazz, String propName) {
         String key = clazz.getName() + ":" + propName;
 
         return PROPERTY_CACHE.computeIfAbsent(key, k -> {
@@ -226,7 +232,7 @@ public class ReflectionUtil {
     /**
      * 将字符串首字母大写
      */
-    private static String capitalize(String s) {
+    private  String capitalize(String s) {
         return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 
@@ -234,7 +240,7 @@ public class ReflectionUtil {
     /**
      * 尝试设置访问权限
      */
-    private static void accessibleAsTrue(AccessibleObject method) {
+    private  void accessibleAsTrue(AccessibleObject method) {
         try {
             if (method.isAccessible() == false) {
                 method.setAccessible(true);

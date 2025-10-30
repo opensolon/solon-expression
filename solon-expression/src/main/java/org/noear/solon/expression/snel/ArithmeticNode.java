@@ -31,35 +31,42 @@ public class ArithmeticNode implements Expression {
     private final ArithmeticOp operator;
     private final Expression left;
     private final Expression right;
+    private final boolean leftIsTemplate;
+    private final boolean rightIsTemplate;
 
     public ArithmeticNode(ArithmeticOp operator, Expression left, Expression right) {
         this.operator = operator;
         this.left = left;
         this.right = right;
+        this.leftIsTemplate = left instanceof TemplateNode;
+        this.rightIsTemplate = right instanceof TemplateNode;
     }
 
     @Override
     public Object eval(Function context) {
-        Object leftVal = left.eval(context);
-        Object rightVal = right.eval(context);
+        Object leftValue = left.eval(context);
+        Object rightValue = right.eval(context);
+
+        if (leftIsTemplate) {
+            leftValue = getOptimizeValue(leftValue, rightValue);
+        } else if (rightIsTemplate) {
+            rightValue = getOptimizeValue(rightValue, leftValue);
+        }
 
         // 处理加法中的非数值类型拼接
         if (operator == ArithmeticOp.ADD) {
-            if (leftVal instanceof String || rightVal instanceof String) {
-                return String.valueOf(leftVal) + rightVal;
+            if (leftValue instanceof String || rightValue instanceof String) {
+                return String.valueOf(leftValue) + rightValue;
             }
         }
 
-        if (leftVal == null) {
-            throw new EvaluationException("Arithmetic left value is null");
-        }
-
-        if (rightVal == null) {
-            throw new EvaluationException("Arithmetic right value is null");
+        if (leftValue == null || rightValue == null) {
+            throw new EvaluationException("Unsupported operation" + toString() + ": " +
+                    leftValue + " " + operator.getCode() + " " + rightValue);
         }
 
         // 动态分派数值计算逻辑
-        return calculateNumbers((Number) leftVal, (Number) rightVal);
+        return calculateNumbers((Number) leftValue, (Number) rightValue);
     }
 
     private Number calculateNumbers(Number a, Number b) {
@@ -165,6 +172,27 @@ public class ArithmeticNode implements Expression {
             default:
                 throw new IllegalArgumentException("Unknown operator: " + operator);
         }
+    }
+
+    /**
+     * 获取优化值
+     */
+    protected Object getOptimizeValue(Object val, Object ref) {
+        if (val instanceof String) {
+            if (ref instanceof Number) {
+                return getNumber((String) val, 0L);
+            }
+        }
+
+        return val;
+    }
+
+    protected Number getNumber(String value, Number defaultValue) {
+        if (value == null && value.length() == 0) {
+            return defaultValue;
+        }
+
+        return Double.parseDouble(value);
     }
 
     @Override

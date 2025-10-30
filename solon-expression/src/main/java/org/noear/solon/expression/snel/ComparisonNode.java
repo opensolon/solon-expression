@@ -28,11 +28,11 @@ import java.util.function.Function;
  * @since 3.1
  */
 public class ComparisonNode implements Expression<Boolean> {
-    private ComparisonOp operator; // 比较运算符，如 ">", "<", "=="
-    private Expression left;
-    private Expression right;
-    private boolean leftIsTemplate;
-    private boolean rightIsTemplate;
+    private final ComparisonOp operator; // 比较运算符，如 ">", "<", "=="
+    private final Expression left;
+    private final Expression right;
+    private final boolean leftIsTemplate;
+    private final boolean rightIsTemplate;
 
     /**
      * 获取操作符

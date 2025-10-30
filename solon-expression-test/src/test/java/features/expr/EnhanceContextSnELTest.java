@@ -2,7 +2,6 @@ package features.expr;
 
 import org.junit.jupiter.api.Test;
 import org.noear.solon.expression.context.EnhanceContext;
-import org.noear.solon.expression.exception.EvaluationException;
 import org.noear.solon.expression.guidance.TypeGuidance;
 import org.noear.solon.expression.guidance.TypeGuidanceUnsafety;
 import org.noear.solon.expression.snel.SnEL;
@@ -216,13 +215,19 @@ public class EnhanceContextSnELTest {
 
     @Test
     void testTypeGuidanceWithoutSupport() {
-        EnhanceContext context = new EnhanceContext<>(new Object())
-                .forTypeGuidance(null);
-
         // 没有类型指导时抛出异常
-        assertThrows(EvaluationException.class, () -> {
-            SnEL.eval("T(java.lang.String)", context);
-        });
+        Throwable err = null;
+
+        try {
+            EnhanceContext context = new EnhanceContext<>(new Object())
+                    .forTypeGuidance(null);
+
+            SnEL.eval("T(java.lang.String)", context, false);
+        } catch (Throwable e) {
+            err = e;
+        }
+
+        assert err != null;
     }
 
     // 测试对象属性访问

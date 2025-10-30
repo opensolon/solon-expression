@@ -153,6 +153,22 @@ public class MathTest {
         Assertions.assertEquals(3, result);
     }
 
+    @Test
+    public void case10() {
+        Map<String, Object> context = new HashMap();
+        context.put("a", 1);
+
+        Assertions.assertThrows(Throwable.class, () -> {
+            SnEL.eval("(a + b) * 2", context, false);
+        });
+
+        try {
+            SnEL.eval("(a + b) * 2", context, false);
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static class MathPlus {
         public static int sum(int a, int b) {
             return a + b;

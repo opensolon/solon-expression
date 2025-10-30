@@ -2,6 +2,7 @@ package features.expr;
 
 import org.junit.jupiter.api.Test;
 import org.noear.solon.expression.context.EnhanceContext;
+import org.noear.solon.expression.exception.EvaluationException;
 import org.noear.solon.expression.guidance.TypeGuidance;
 import org.noear.solon.expression.guidance.TypeGuidanceUnsafety;
 import org.noear.solon.expression.snel.SnEL;
@@ -219,7 +220,7 @@ public class EnhanceContextSnELTest {
                 .forTypeGuidance(null);
 
         // 没有类型指导时抛出异常
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(EvaluationException.class, () -> {
             SnEL.eval("T(java.lang.String)", context);
         });
     }

@@ -61,7 +61,7 @@ public class ArithmeticNode implements Expression {
         }
 
         if (leftValue == null || rightValue == null) {
-            throw new EvaluationException("Unsupported operation" + toString() + ": " +
+            throw new EvaluationException("Unsupported operation" + this.toString() + ": " +
                     leftValue + " " + operator.getCode() + " " + rightValue);
         }
 

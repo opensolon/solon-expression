@@ -103,15 +103,16 @@ public class PropertyNode implements Expression {
     /**
      * 获取 Java Bean 属性值
      */
-    private PropertyHolder propertyCached;
-
     private Object getPropertyValue(Object target, String propName) {
-        if (propertyCached == null) {
-            propertyCached = ReflectionUtil.getProperty(target.getClass(), propName);
+        final PropertyHolder property;
+        if (target instanceof Class) {
+            property = ReflectionUtil.getProperty((Class<?>) target, propName);
+        } else {
+            property = ReflectionUtil.getProperty(target.getClass(), propName);
         }
 
         try {
-            return propertyCached.getValue(target);
+            return property.getValue(target);
         } catch (Throwable e) {
             throw new EvaluationException("Failed to access property: " + propName, e);
         }

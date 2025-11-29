@@ -13,9 +13,7 @@ Solon-Expression（SnEL）
 </p>
 
 <p align="center">
-    <a target="_blank" href="https://deepwiki.com/opensolon/solon-expression">
-        <img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" />
-    </a>
+    <a href="https://deepwiki.com/opensolon/solon-expression"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
     <a target="_blank" href="https://central.sonatype.com/search?q=org.noear%3Asolon-parent">
         <img src="https://img.shields.io/maven-central/v/org.noear/solon.svg?label=Maven%20Central" alt="Maven" />
     </a>
@@ -54,7 +52,7 @@ Solon-Expression（SnEL）
 
 ## 1、描述
 
-Solon 基础插件。为 Solon 提供了一套表达式通用接口。并内置 Solon Expression Language（简称，SnEL）“求值”表达式实现方案。纯 Java 代码实现，零依赖（可用于其它任何框架）。编译后为 40KB 多点儿。
+Solon 基础插件。为 Solon 提供了一套表达式通用接口。并内置 Solon Expression Language（简称，SnEL）“求值”表达式实现方案。纯 Java 代码实现，零依赖（可用于其它任何框架，SpringBoot、jFinal、Vert.x 等）。编译后为 40KB 多点儿。
 
 * 运行后，内存比较省（与同类相比）
 * 只作解析运行（没有编译，没有字节码。不会产生新的隐藏类）

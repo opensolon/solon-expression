@@ -1,5 +1,6 @@
 package features.expr;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.Utils;
 import org.noear.solon.core.util.Assert;
@@ -64,6 +65,14 @@ public class PropertiesTest {
     public void case7() {
         assert testExpression("${yyy:1} IN ['1','2','3']", Utils.asMap());
         assert testExpression("${yyy:1} NOT IN ['1','2','3']", Utils.asMap()) == false;
+    }
+
+    @Test
+    public void case8() {
+        Map<String, Object> map = Utils.asMap("a", 1, "b", 2);
+        String rst = SnEL.evalTmpl("#{a} + ${b}", map);
+        System.out.println(rst);
+        Assertions.assertEquals("1 + 2", rst);
     }
 
     private static boolean testExpression(String expr, Map context) {

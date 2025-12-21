@@ -16,9 +16,7 @@
 package org.noear.solon.expression.snel;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.noear.solon.expression.Expression;
 import org.noear.solon.expression.Parser;
@@ -331,7 +329,7 @@ public class SnelEvaluateParser implements Parser {
      */
     private String parseClassName(ParserState state) {
         StringBuilder sb = new StringBuilder();
-        while (state.isIdentifier() || state.getCurrentChar() == '.') {
+        while (state.isIdentifierStart() || state.getCurrentChar() == '.') {
             sb.append((char) state.getCurrentChar());
             state.nextChar();
         }
@@ -585,7 +583,7 @@ public class SnelEvaluateParser implements Parser {
      */
     private String parseIdentifier(ParserState state) {
         StringBuilder sb = new StringBuilder();
-        while (state.isIdentifier()) {
+        while (state.isIdentifierStart()) {
             sb.append((char) state.getCurrentChar());
             state.nextChar();
         }
@@ -641,7 +639,7 @@ public class SnelEvaluateParser implements Parser {
             }
             state.nextChar();
         }
-        if (state.isIdentifier()) {
+        if (state.isIdentifierStart()) {
             state.reset();
             return false;
         }
@@ -733,7 +731,7 @@ public class SnelEvaluateParser implements Parser {
         /**
          * 检查当前是否是标识符字符（字母/数字/下划线）
          */
-        public boolean isIdentifier() {
+        public boolean isIdentifierStart() {
             return Character.isLetterOrDigit(ch) || ch == '_';
         }
 

@@ -90,10 +90,11 @@ public class SnelEvaluateParser implements Parser {
             return parsePropertyExpression(expr);
         }
 
-        // 检查是否是整体包装的解析表达式 (例如 "#{...}")
-        if (isFullMarkerExpression(expr, MARK_START_EXPRESSION)) {
-            // 剥离外壳，递归解析内部内容
-            return parseDo(expr.substring(2, expr.length() - 1));
+        // 检查是否是整体包装的解析表达式 (例如 "#{...}" 或 "{...}")
+        if (isFullMarkerExpression(expr, MARK_START_EXPRESSION) || isFullMarkerExpression(expr, (char) 0)) {
+            // 剥离外壳，递归解析内部内容。如果是 { 开头则偏移1，如果是 #{ 开头则偏移2
+            int markerLen = (expr.charAt(0) == MARK_BRACE_OPEN) ? 1 : 2;
+            return parseDo(expr.substring(markerLen, expr.length() - 1));
         }
 
         ParserState state = new ParserState(expr);
@@ -109,10 +110,16 @@ public class SnelEvaluateParser implements Parser {
      */
     private boolean isFullMarkerExpression(String expr, char marker) {
         int len = expr.length();
-        return len > 3 &&
-                expr.charAt(0) == marker &&
-                expr.charAt(1) == MARK_BRACE_OPEN &&
-                expr.charAt(len - 1) == MARK_BRACE_CLOSE;
+        if (len < 2) return false;
+
+        if (marker != 0 && expr.charAt(0) == marker) {
+            // 情况：#{...} 或 ${...}
+            return len > 2 && expr.charAt(1) == MARK_BRACE_OPEN && expr.charAt(len - 1) == MARK_BRACE_CLOSE;
+        } else if (marker == 0 && expr.charAt(0) == MARK_BRACE_OPEN) {
+            // 情况：{...}
+            return expr.charAt(len - 1) == MARK_BRACE_CLOSE;
+        }
+        return false;
     }
 
     /**
@@ -185,15 +192,17 @@ public class SnelEvaluateParser implements Parser {
      * 检查是否是包装表达式起始
      */
     private boolean isExpressionStart(ParserState state) {
-        return state.getCurrentChar() == MARK_START_EXPRESSION && state.peekNextChar() == MARK_BRACE_OPEN;
+        return (state.getCurrentChar() == MARK_START_EXPRESSION && state.peekNextChar() == MARK_BRACE_OPEN)
+                || state.getCurrentChar() == MARK_BRACE_OPEN;
     }
 
     /**
      * 解析属性表达式内容（剥离外壳，交给 TemplateNode）
      */
     private Expression parsePropertyExpression(String expr) {
-        // 提取 ${} 中的内容
-        String content = expr.substring(2, expr.length() - 1);
+        // 自动识别偏移量：如果是 { 则偏移1，如果是 ${ 则偏移2
+        int offset = (expr.charAt(0) == MARK_BRACE_OPEN) ? 1 : 2;
+        String content = expr.substring(offset, expr.length() - 1);
 
         // 使用模板解析器来处理属性表达式（支持默认值）
         List<TemplateFragment> fragments = new ArrayList<>();
@@ -342,10 +351,11 @@ public class SnelEvaluateParser implements Parser {
             String propertyExpr = parseMarkerExpressionContent(state);
             expr = parsePropertyExpression(propertyExpr);
         } else if (isExpressionStart(state)) {
-            // 检查是否是 #{} 包装表达式
+            // 检查是否是 #{} 或 {} 包装表达式
             String innerExprStr = parseMarkerExpressionContent(state);
-            // 核心修正：剥离外壳 #{ 和 }，递归解析内部纯算术/逻辑内容
-            String rawContent = innerExprStr.substring(2, innerExprStr.length() - 1);
+            // 核心修正：根据起始字符剥离外壳，递归解析内部纯算术/逻辑内容
+            int markerLen = (innerExprStr.charAt(0) == MARK_BRACE_OPEN) ? 1 : 2;
+            String rawContent = innerExprStr.substring(markerLen, innerExprStr.length() - 1);
             expr = parseDo(rawContent);
         } else if (eat(state, '(')) {
             expr = parseElvisExpression(state);
@@ -383,16 +393,20 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
-     * 解析带标记的表达式（如 ${xxx} 或 #{xxx}）
+     * 解析带标记的表达式（如 ${xxx} 或 #{xxx} 或 {xxx}）
      */
     private String parseMarkerExpressionContent(ParserState state) {
         StringBuilder sb = new StringBuilder();
-        sb.append((char) state.getCurrentChar()); // marker char
-        state.nextChar();
-        sb.append((char) state.getCurrentChar()); // { char
+        int first = state.getCurrentChar();
+        sb.append((char) first); // marker char (# / $ / {)
         state.nextChar();
 
-        int braceCount = 1;
+        if (first != MARK_BRACE_OPEN) {
+            sb.append((char) state.getCurrentChar()); // { char
+            state.nextChar();
+        }
+
+        int braceCount = 1; // 已经进入一个大括号
         while (state.getCurrentChar() != -1 && braceCount > 0) {
             char c = (char) state.getCurrentChar();
             sb.append(c);

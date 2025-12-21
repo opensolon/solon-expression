@@ -2,10 +2,12 @@
 
 ### v3.8.0
 
-* 添加 SnelParser 类，为 TemplateParser 和EvaluateParser 提供出入口
-* 优化 SnelTemplateParser 支持定义占位符（可支持 `{xxx}` 表达式）
-* 优化 LRUCache 性能
+* 添加 SnelParser 类，为 TemplateParser 和 EvaluateParser 提供出入口和占位符配置
+* 优化 EvaluateParser 支持定义占位符（可支持 `{xxx}` 表达式）
+* 优化 TemplateParser 支持定义占位符（可支持 `{xxx}` 表达式）
+* 优化 LRUCache 性能（提高缓存性能）
 * 调整 SnelEvaluateParser 更名为 EvaluateParser
+* 调整 SnelTemplateParser 更名为 TemplateParser
 
 ### v3.7.0
 

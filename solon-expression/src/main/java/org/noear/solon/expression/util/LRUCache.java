@@ -30,12 +30,10 @@ import java.util.function.Function;
  */
 public class LRUCache<K, V> {
     private final int capacity;
-    // 存储 Node 而不是直接存 V，减少 Map 维护开销
     private final ConcurrentHashMap<K, Node<K, V>> data;
     private final NodeList<K, V> accessOrder;
     private final ReentrantLock evictionLock = new ReentrantLock();
 
-    // 读缓冲区：暂存访问记录，避免每次访问都竞争锁
     private final ConcurrentLinkedQueue<Node<K, V>> readBuffer = new ConcurrentLinkedQueue<>();
     private final AtomicInteger bufferSize = new AtomicInteger(0);
     private final AtomicInteger sizeCounter = new AtomicInteger(0);
@@ -132,7 +130,7 @@ public class LRUCache<K, V> {
     }
 
     /**
-     * 获取当前近似大小
+     * 获取大小
      */
     public int size() {
         return sizeCounter.get();

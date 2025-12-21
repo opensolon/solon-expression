@@ -342,10 +342,11 @@ public class SnelEvaluateParser implements Parser {
             String propertyExpr = parseMarkerExpressionContent(state);
             expr = parsePropertyExpression(propertyExpr);
         } else if (isExpressionStart(state)) {
-            // 检查是否是 #{} 表达式
+            // 检查是否是 #{} 包装表达式
             String innerExprStr = parseMarkerExpressionContent(state);
-            // 递归解析剥离外壳后的字符串
-            expr = parseDo(innerExprStr.substring(2, innerExprStr.length() - 1));
+            // 核心修正：剥离外壳 #{ 和 }，递归解析内部纯算术/逻辑内容
+            String rawContent = innerExprStr.substring(2, innerExprStr.length() - 1);
+            expr = parseDo(rawContent);
         } else if (eat(state, '(')) {
             expr = parseElvisExpression(state);
             require(state, ')', "Expected ')' after expression");

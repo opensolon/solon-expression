@@ -40,6 +40,11 @@ public class SnelTemplateParser implements Parser<String> {
     private static final SnelTemplateParser INSTANCE = new SnelTemplateParser(10000);
     private final LRUCache<String, Expression<String>> exprCached;
 
+    private final char MARK_START_EXPRESSION; // 默认 '#'
+    private final char MARK_START_PROPERTIES; // 默认 '$'
+    private final char MARK_BRACE_OPEN;       // 默认 '{'
+    private final char MARK_BRACE_CLOSE;      // 默认 '}'
+
     public SnelTemplateParser(int cahceCapacity) {
         this(cahceCapacity, '#', '$');
     }
@@ -56,11 +61,6 @@ public class SnelTemplateParser implements Parser<String> {
         MARK_BRACE_OPEN = braceOpenMark;
         MARK_BRACE_CLOSE = braceCloseMark;
     }
-
-    private final char MARK_START_EXPRESSION;
-    private final char MARK_START_PROPERTIES;
-    private final char MARK_BRACE_OPEN;
-    private final char MARK_BRACE_CLOSE;
 
     public static SnelTemplateParser getInstance() {
         return INSTANCE;

@@ -49,12 +49,29 @@ public class SnelEvaluateParser implements Parser {
     private static final SnelEvaluateParser INSTANCE = new SnelEvaluateParser(10000);
     private final LRUCache<String, Expression> exprCached;
 
+    private final char MARK_START_EXPRESSION; // 默认 '#'
+    private final char MARK_START_PROPERTIES; // 默认 '$'
+    private final char MARK_BRACE_OPEN;       // 默认 '{'
+    private final char MARK_BRACE_CLOSE;      // 默认 '}'
+
     public static SnelEvaluateParser getInstance() {
         return INSTANCE;
     }
 
     public SnelEvaluateParser(int cahceCapacity) {
+        this(cahceCapacity, '#', '$');
+    }
+
+    public SnelEvaluateParser(int cahceCapacity, char expreStartMark, char propsStartMark) {
+        this(cahceCapacity, expreStartMark, propsStartMark, '{', '}');
+    }
+
+    public SnelEvaluateParser(int cahceCapacity, char expreStartMark, char propsStartMark, char braceOpenMark, char braceCloseMark) {
         this.exprCached = new LRUCache<>(cahceCapacity);
+        this.MARK_START_EXPRESSION = expreStartMark;
+        this.MARK_START_PROPERTIES = propsStartMark;
+        this.MARK_BRACE_OPEN = braceOpenMark;
+        this.MARK_BRACE_CLOSE = braceCloseMark;
     }
 
     @Override
@@ -67,9 +84,15 @@ public class SnelEvaluateParser implements Parser {
     }
 
     protected Expression parseDo(String expr) {
-        // 检查是否是 ${} 表达式
-        if (isPropertyExpression(expr)) {
+        // 检查是否是整体包装的属性表达式 (例如 "${...}")
+        if (isFullMarkerExpression(expr, MARK_START_PROPERTIES)) {
             return parsePropertyExpression(expr);
+        }
+
+        // 检查是否是整体包装的解析表达式 (例如 "#{...}")
+        if (isFullMarkerExpression(expr, MARK_START_EXPRESSION)) {
+            // 剥离外壳，递归解析内部内容
+            return parseDo(expr.substring(2, expr.length() - 1));
         }
 
         ParserState state = new ParserState(expr);
@@ -78,6 +101,17 @@ public class SnelEvaluateParser implements Parser {
             throw new CompilationException("Unexpected trailing character: " + (char) state.getCurrentChar());
         }
         return result;
+    }
+
+    /**
+     * 检查是否是整体被标记包裹的表达式
+     */
+    private boolean isFullMarkerExpression(String expr, char marker) {
+        int len = expr.length();
+        return len > 3 &&
+                expr.charAt(0) == marker &&
+                expr.charAt(1) == MARK_BRACE_OPEN &&
+                expr.charAt(len - 1) == MARK_BRACE_CLOSE;
     }
 
     /**
@@ -140,21 +174,27 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
-     * 检查是否是 ${} 属性表达式
+     * 检查是否是属性表达式（用于 Primary 内部判定）
      */
-    private boolean isPropertyExpression(String expr) {
-        return expr.startsWith("${") && expr.endsWith("}");
+    private boolean isPropertyStart(ParserState state) {
+        return state.getCurrentChar() == MARK_START_PROPERTIES && state.peekNextChar() == MARK_BRACE_OPEN;
     }
 
     /**
-     * 解析 ${} 属性表达式
+     * 检查是否是包装表达式起始
+     */
+    private boolean isExpressionStart(ParserState state) {
+        return state.getCurrentChar() == MARK_START_EXPRESSION && state.peekNextChar() == MARK_BRACE_OPEN;
+    }
+
+    /**
+     * 解析属性表达式内容（剥离外壳，交给 TemplateNode）
      */
     private Expression parsePropertyExpression(String expr) {
         // 提取 ${} 中的内容
         String content = expr.substring(2, expr.length() - 1);
 
         // 使用模板解析器来处理属性表达式（支持默认值）
-        // 创建一个只包含该属性的模板片段
         List<TemplateFragment> fragments = new ArrayList<>();
         fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, content));
 
@@ -285,22 +325,26 @@ public class SnelEvaluateParser implements Parser {
      * 4. 布尔常量（true/false）
      * 5. 变量或属性访问（如 user.name）
      * 6. 方法调用（如 Math.add(1, 2)）
-     * 7. ${} 属性表达式（带默认值）
+     * 7. ${} 属性表达式 或 #{} 包装表达式
      */
     private Expression parsePrimaryExpression(ParserState state) {
         state.skipWhitespace();
         Expression expr;
-
 
         if (eat(state, "T(")) {
             // 检查是否是 T(...) 类型表达式
             String className = parseClassName(state);
             require(state, ')', "Expected ')' after class name in T(...) expression");
             expr = new TypeNode(className);
-        } else if  (state.getCurrentChar() == '$' && state.peekNextChar() == '{') {
+        } else if (isPropertyStart(state)) {
             // 检查是否是 ${} 属性表达式
-            String propertyExpr = parsePropertyExpression(state);
+            String propertyExpr = parseMarkerExpressionContent(state);
             expr = parsePropertyExpression(propertyExpr);
+        } else if (isExpressionStart(state)) {
+            // 检查是否是 #{} 表达式
+            String innerExprStr = parseMarkerExpressionContent(state);
+            // 递归解析剥离外壳后的字符串
+            expr = parseDo(innerExprStr.substring(2, innerExprStr.length() - 1));
         } else if (eat(state, '(')) {
             expr = parseElvisExpression(state);
             require(state, ')', "Expected ')' after expression");
@@ -337,13 +381,13 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
-     * 解析 ${} 属性表达式（从状态中读取）
+     * 解析带标记的表达式（如 ${xxx} 或 #{xxx}）
      */
-    private String parsePropertyExpression(ParserState state) {
+    private String parseMarkerExpressionContent(ParserState state) {
         StringBuilder sb = new StringBuilder();
-        sb.append((char) state.getCurrentChar()); // $
+        sb.append((char) state.getCurrentChar()); // marker char
         state.nextChar();
-        sb.append((char) state.getCurrentChar()); // {
+        sb.append((char) state.getCurrentChar()); // { char
         state.nextChar();
 
         int braceCount = 1;
@@ -352,9 +396,9 @@ public class SnelEvaluateParser implements Parser {
             sb.append(c);
             state.nextChar();
 
-            if (c == '{') {
+            if (c == MARK_BRACE_OPEN) {
                 braceCount++;
-            } else if (c == '}') {
+            } else if (c == MARK_BRACE_CLOSE) {
                 braceCount--;
             }
         }
@@ -579,7 +623,7 @@ public class SnelEvaluateParser implements Parser {
     }
 
     /**
-     * 解析标识符
+     * 解析标识符 (排除 $)
      */
     private String parseIdentifier(ParserState state) {
         StringBuilder sb = new StringBuilder();
@@ -729,7 +773,7 @@ public class SnelEvaluateParser implements Parser {
         }
 
         /**
-         * 检查当前是否是标识符字符（字母/数字/下划线）
+         * 检查当前是否是标识符字符（排除 $，仅限字母/数字/下划线）
          */
         public boolean isIdentifierStart() {
             return Character.isLetterOrDigit(ch) || ch == '_';

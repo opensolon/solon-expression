@@ -2,7 +2,7 @@
 
 ### v3.8.0
 
-* 优化 SnelTemplateParser 支持定义占位符
+* 优化 SnelTemplateParser 支持定义占位符（可支持 `{xxx}` 表达式）
 * 优化 LRUCache 性能
 
 ### v3.7.0

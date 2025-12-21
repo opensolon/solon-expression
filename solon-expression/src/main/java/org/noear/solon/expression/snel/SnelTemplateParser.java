@@ -34,6 +34,7 @@ import java.util.Map;
  * </p>
  * @author noear
  * @since 3.1
+ * @since 3.8
  */
 public class SnelTemplateParser implements Parser<String> {
     private static final SnelTemplateParser INSTANCE = new SnelTemplateParser(10000);
@@ -76,49 +77,60 @@ public class SnelTemplateParser implements Parser<String> {
     }
 
     private Expression<String> parseDo(String expr) {
-        List<TemplateFragment> fragments = new ArrayList<>(8); // 基于经验值的容量初始化
+        List<TemplateFragment> fragments = new ArrayList<>(8);
         boolean inExpression = false;
         char marker = 0;
+        int markerLen = 0;
         int textStart = 0;
         int scanPosition = 0;
         final int length = expr.length();
 
         while (scanPosition < length) {
             if (!inExpression) {
-                // 文本模式：批量扫描直到发现表达式起始标记
+                // 1. 文本模式：寻找标记起始位
                 int exprStart = findExpressionStart(expr, scanPosition);
                 if (exprStart != -1) {
-                    // 添加前置文本
+                    // 提取前置文本
                     if (textStart < exprStart) {
                         fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart, exprStart)));
                     }
                     marker = expr.charAt(exprStart);
+                    markerLen = (marker == MARK_BRACE_OPEN) ? 1 : 2;
                     inExpression = true;
-                    textStart = scanPosition = exprStart + 2; // 跳过标记符（如 "#{"）
+                    textStart = scanPosition = exprStart + markerLen;
                 } else {
-                    // 剩余部分全部作为文本
+                    // 无标记，剩余部分全为文本
                     fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart)));
+                    textStart = length;
                     break;
                 }
             } else {
-                // 表达式模式：需要平衡大括号以处理嵌套表达式
+                // 2. 表达式模式：寻找匹配的闭合括号
                 int closePos = findExpressionEnd(expr, scanPosition);
                 if (closePos != -1) {
                     String content = expr.substring(textStart, closePos);
-                    if (MARK_START_PROPERTIES == marker) {
-                        fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, content));
-                    } else {
-                        fragments.add(new TemplateFragment(TemplateMarker.EXPRESSION, content));
-                    }
+                    TemplateMarker type = (marker == MARK_START_PROPERTIES) ? TemplateMarker.PROPERTIES : TemplateMarker.EXPRESSION;
+                    fragments.add(new TemplateFragment(type, content));
 
                     inExpression = false;
-                    textStart = scanPosition = closePos + 1; // 跳过闭合标记 "}"
+                    textStart = scanPosition = closePos + 1;
                 } else {
-                    // 未闭合表达式作为文本回退
-                    fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart - 2, textStart) + expr.substring(textStart)));
+                    // 未闭合，执行回退处理并结束
+                    fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart - markerLen)));
+                    inExpression = false; // 标记已处理
+                    textStart = length;
                     break;
                 }
             }
+        }
+
+        // 3. 收尾逻辑：处理循环因达到长度限制而终止时的残余状态
+        if (inExpression) {
+            // 处理字符串末尾是 "#{ " 或 " { " 导致 while 终止的情况
+            fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart - markerLen)));
+        } else if (textStart < length) {
+            // 处理最后的剩余文本（防御性补丁）
+            fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart)));
         }
 
         return new TemplateNode(fragments);
@@ -126,17 +138,19 @@ public class SnelTemplateParser implements Parser<String> {
 
     // 快速定位表达式起始标记（"#{" 或 "${"）
     private int findExpressionStart(String s, int start) {
-        for (int i = start; i < s.length() - 1; i++) {
+        int len = s.length();
+        for (int i = start; i < len; i++) {
             char c = s.charAt(i);
 
-            if (c != MARK_START_EXPRESSION && c != MARK_START_PROPERTIES) {
-                continue;
-            }
-
-            if (MARK_START_EXPRESSION == MARK_BRACE_OPEN) {
-                return i - 1;
-            } else if (s.charAt(i + 1) == MARK_BRACE_OPEN) {
-                return i;
+            if (c == MARK_START_EXPRESSION || c == MARK_START_PROPERTIES) {
+                // 如果是单字符标记模式（如 MARK_START_PROPERTIES 本身就是 '{'）
+                if (c == MARK_BRACE_OPEN) {
+                    return i;
+                }
+                // 如果是双字符标记模式（探测下一位是否是 '{'）
+                if (i + 1 < len && s.charAt(i + 1) == MARK_BRACE_OPEN) {
+                    return i;
+                }
             }
         }
 

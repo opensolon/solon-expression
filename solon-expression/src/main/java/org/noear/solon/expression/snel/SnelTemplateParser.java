@@ -44,12 +44,16 @@ public class SnelTemplateParser implements Parser<String> {
     }
 
     public SnelTemplateParser(int cahceCapacity, char expreStartMark, char propsStartMark) {
+        this(cahceCapacity, expreStartMark, propsStartMark, '{', '}');
+    }
+
+    public SnelTemplateParser(int cahceCapacity, char expreStartMark, char propsStartMark, char braceOpenMark, char braceCloseMark) {
         exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
 
         MARK_START_EXPRESSION = expreStartMark;
         MARK_START_PROPERTIES = propsStartMark;
-        MARK_BRACE_OPEN = '{';
-        MARK_BRACE_CLOSE = '}';
+        MARK_BRACE_OPEN = braceOpenMark;
+        MARK_BRACE_CLOSE = braceCloseMark;
     }
 
     private final char MARK_START_EXPRESSION;

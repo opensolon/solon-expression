@@ -20,12 +20,10 @@ import org.noear.solon.expression.Expression;
 import org.noear.solon.expression.util.LRUCache;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 /**
- * Solon 表达式语言模板解析器
+ * 模板表达式解析器
  *
  * <p>
  * 支持以下示例：
@@ -36,39 +34,13 @@ import java.util.Map;
  * @since 3.1
  * @since 3.8
  */
-public class SnelTemplateParser implements Parser<String> {
-    private static final SnelTemplateParser INSTANCE = new SnelTemplateParser(10000);
+public class TemplateParser implements Parser<String> {
     private final LRUCache<String, Expression<String>> exprCached;
+    private final SnelParser parser;
 
-    private final char MARK_START_EXPRESSION; // 默认 '#'
-    private final char MARK_START_PROPERTIES; // 默认 '$'
-    private final char MARK_BRACE_OPEN;       // 默认 '{'
-    private final char MARK_BRACE_CLOSE;      // 默认 '}'
-
-    public SnelTemplateParser(int cahceCapacity) {
-        this(cahceCapacity, '#', '$');
-    }
-
-    public SnelTemplateParser(int cahceCapacity, char expreStartMark, char propsStartMark) {
-        this(cahceCapacity, expreStartMark, propsStartMark, '{', '}');
-    }
-
-    public SnelTemplateParser(int cahceCapacity, char expreStartMark, char propsStartMark, char braceOpenMark, char braceCloseMark) {
-        exprCached = new LRUCache<>(cahceCapacity);
-
-        MARK_START_EXPRESSION = expreStartMark;
-        MARK_START_PROPERTIES = propsStartMark;
-        MARK_BRACE_OPEN = braceOpenMark;
-        MARK_BRACE_CLOSE = braceCloseMark;
-    }
-
-    public static SnelTemplateParser getInstance() {
-        return INSTANCE;
-    }
-
-    public boolean hasMarker(String expr) {
-        return expr.indexOf(MARK_START_EXPRESSION) >= 0 ||
-                expr.indexOf(MARK_START_PROPERTIES) >= 0;
+    TemplateParser(SnelParser parser, int cahceCapacity) {
+        this.exprCached = new LRUCache<>(cahceCapacity);
+        this.parser = parser;
     }
 
     @Override
@@ -95,7 +67,7 @@ public class SnelTemplateParser implements Parser<String> {
                         fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart, exprStart)));
                     }
                     marker = expr.charAt(exprStart);
-                    markerLen = (marker == MARK_BRACE_OPEN) ? 1 : 2;
+                    markerLen = (marker == parser.MARK_BRACE_OPEN) ? 1 : 2;
                     inExpression = true;
                     textStart = scanPosition = exprStart + markerLen;
                 } else {
@@ -109,7 +81,7 @@ public class SnelTemplateParser implements Parser<String> {
                 int closePos = findExpressionEnd(expr, scanPosition);
                 if (closePos != -1) {
                     String content = expr.substring(textStart, closePos);
-                    TemplateMarker type = (marker == MARK_START_PROPERTIES) ? TemplateMarker.PROPERTIES : TemplateMarker.EXPRESSION;
+                    TemplateMarker type = (marker == parser.MARK_START_PROPERTIES) ? TemplateMarker.PROPERTIES : TemplateMarker.EXPRESSION;
                     fragments.add(new TemplateFragment(type, content));
 
                     inExpression = false;
@@ -133,7 +105,7 @@ public class SnelTemplateParser implements Parser<String> {
             fragments.add(new TemplateFragment(TemplateMarker.TEXT, expr.substring(textStart)));
         }
 
-        return new TemplateNode(fragments);
+        return new TemplateNode(parser, fragments);
     }
 
     // 快速定位表达式起始标记（"#{" 或 "${"）
@@ -142,13 +114,13 @@ public class SnelTemplateParser implements Parser<String> {
         for (int i = start; i < len; i++) {
             char c = s.charAt(i);
 
-            if (c == MARK_START_EXPRESSION || c == MARK_START_PROPERTIES) {
+            if (c == parser.MARK_START_EXPRESSION || c == parser.MARK_START_PROPERTIES) {
                 // 如果是单字符标记模式（如 MARK_START_PROPERTIES 本身就是 '{'）
-                if (c == MARK_BRACE_OPEN) {
+                if (c == parser.MARK_BRACE_OPEN) {
                     return i;
                 }
                 // 如果是双字符标记模式（探测下一位是否是 '{'）
-                if (i + 1 < len && s.charAt(i + 1) == MARK_BRACE_OPEN) {
+                if (i + 1 < len && s.charAt(i + 1) == parser.MARK_BRACE_OPEN) {
                     return i;
                 }
             }
@@ -162,9 +134,9 @@ public class SnelTemplateParser implements Parser<String> {
         int braceCount = 1; // 已经有一个开括号
         for (int i = start; i < s.length(); i++) {
             char c = s.charAt(i);
-            if (c == MARK_BRACE_OPEN) {
+            if (c == parser.MARK_BRACE_OPEN) {
                 braceCount++;
-            } else if (c == MARK_BRACE_CLOSE) {
+            } else if (c == parser.MARK_BRACE_CLOSE) {
                 braceCount--;
                 if (braceCount == 0) {
                     return i;

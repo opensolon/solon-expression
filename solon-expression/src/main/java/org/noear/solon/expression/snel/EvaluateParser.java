@@ -25,7 +25,7 @@ import org.noear.solon.expression.util.LRUCache;
 
 
 /**
- * Solon 表达式语言求值解析器
+ * 求值表达式解析器
  *
  * <p>
  * 支持以下特性：
@@ -46,33 +46,13 @@ import org.noear.solon.expression.util.LRUCache;
  * @since 3.1
  * @since 3.8
  * */
-public class SnelEvaluateParser implements Parser {
-    private static final SnelEvaluateParser INSTANCE = new SnelEvaluateParser(10000);
+public class EvaluateParser implements Parser {
     private final LRUCache<String, Expression> exprCached;
+    private final SnelParser parser;
 
-    private final char MARK_START_EXPRESSION; // 默认 '#'
-    private final char MARK_START_PROPERTIES; // 默认 '$'
-    private final char MARK_BRACE_OPEN;       // 默认 '{'
-    private final char MARK_BRACE_CLOSE;      // 默认 '}'
-
-    public static SnelEvaluateParser getInstance() {
-        return INSTANCE;
-    }
-
-    public SnelEvaluateParser(int cahceCapacity) {
-        this(cahceCapacity, '#', '$');
-    }
-
-    public SnelEvaluateParser(int cahceCapacity, char expreStartMark, char propsStartMark) {
-        this(cahceCapacity, expreStartMark, propsStartMark, '{', '}');
-    }
-
-    public SnelEvaluateParser(int cahceCapacity, char expreStartMark, char propsStartMark, char braceOpenMark, char braceCloseMark) {
+    EvaluateParser(SnelParser parser, int cahceCapacity) {
         this.exprCached = new LRUCache<>(cahceCapacity);
-        this.MARK_START_EXPRESSION = expreStartMark;
-        this.MARK_START_PROPERTIES = propsStartMark;
-        this.MARK_BRACE_OPEN = braceOpenMark;
-        this.MARK_BRACE_CLOSE = braceCloseMark;
+        this.parser = parser;
     }
 
     @Override
@@ -86,14 +66,14 @@ public class SnelEvaluateParser implements Parser {
 
     protected Expression parseDo(String expr) {
         // 检查是否是整体包装的属性表达式 (例如 "${...}")
-        if (isFullMarkerExpression(expr, MARK_START_PROPERTIES)) {
+        if (isFullMarkerExpression(expr, parser.MARK_START_PROPERTIES)) {
             return parsePropertyExpression(expr);
         }
 
         // 检查是否是整体包装的解析表达式 (例如 "#{...}" 或 "{...}")
-        if (isFullMarkerExpression(expr, MARK_START_EXPRESSION) || isFullMarkerExpression(expr, (char) 0)) {
+        if (isFullMarkerExpression(expr, parser.MARK_START_EXPRESSION) || isFullMarkerExpression(expr, (char) 0)) {
             // 剥离外壳，递归解析内部内容。如果是 { 开头则偏移1，如果是 #{ 开头则偏移2
-            int markerLen = (expr.charAt(0) == MARK_BRACE_OPEN) ? 1 : 2;
+            int markerLen = (expr.charAt(0) == parser.MARK_BRACE_OPEN) ? 1 : 2;
             return parseDo(expr.substring(markerLen, expr.length() - 1));
         }
 
@@ -114,10 +94,10 @@ public class SnelEvaluateParser implements Parser {
 
         if (marker != 0 && expr.charAt(0) == marker) {
             // 情况：#{...} 或 ${...}
-            return len > 2 && expr.charAt(1) == MARK_BRACE_OPEN && expr.charAt(len - 1) == MARK_BRACE_CLOSE;
-        } else if (marker == 0 && expr.charAt(0) == MARK_BRACE_OPEN) {
+            return len > 2 && expr.charAt(1) == parser.MARK_BRACE_OPEN && expr.charAt(len - 1) == parser.MARK_BRACE_CLOSE;
+        } else if (marker == 0 && expr.charAt(0) == parser.MARK_BRACE_OPEN) {
             // 情况：{...}
-            return expr.charAt(len - 1) == MARK_BRACE_CLOSE;
+            return expr.charAt(len - 1) == parser.MARK_BRACE_CLOSE;
         }
         return false;
     }
@@ -185,15 +165,15 @@ public class SnelEvaluateParser implements Parser {
      * 检查是否是属性表达式（用于 Primary 内部判定）
      */
     private boolean isPropertyStart(ParserState state) {
-        return state.getCurrentChar() == MARK_START_PROPERTIES && state.peekNextChar() == MARK_BRACE_OPEN;
+        return state.getCurrentChar() == parser.MARK_START_PROPERTIES && state.peekNextChar() == parser.MARK_BRACE_OPEN;
     }
 
     /**
      * 检查是否是包装表达式起始
      */
     private boolean isExpressionStart(ParserState state) {
-        return (state.getCurrentChar() == MARK_START_EXPRESSION && state.peekNextChar() == MARK_BRACE_OPEN)
-                || state.getCurrentChar() == MARK_BRACE_OPEN;
+        return (state.getCurrentChar() == parser.MARK_START_EXPRESSION && state.peekNextChar() == parser.MARK_BRACE_OPEN)
+                || state.getCurrentChar() == parser.MARK_BRACE_OPEN;
     }
 
     /**
@@ -201,14 +181,14 @@ public class SnelEvaluateParser implements Parser {
      */
     private Expression parsePropertyExpression(String expr) {
         // 自动识别偏移量：如果是 { 则偏移1，如果是 ${ 则偏移2
-        int offset = (expr.charAt(0) == MARK_BRACE_OPEN) ? 1 : 2;
+        int offset = (expr.charAt(0) == parser.MARK_BRACE_OPEN) ? 1 : 2;
         String content = expr.substring(offset, expr.length() - 1);
 
         // 使用模板解析器来处理属性表达式（支持默认值）
         List<TemplateFragment> fragments = new ArrayList<>();
         fragments.add(new TemplateFragment(TemplateMarker.PROPERTIES, content));
 
-        return new TemplateNode(fragments);
+        return new TemplateNode(parser, fragments);
     }
 
     // 以下为递归下降解析器的核心方法 ----------------------------
@@ -354,7 +334,7 @@ public class SnelEvaluateParser implements Parser {
             // 检查是否是 #{} 或 {} 包装表达式
             String innerExprStr = parseMarkerExpressionContent(state);
             // 核心修正：根据起始字符剥离外壳，递归解析内部纯算术/逻辑内容
-            int markerLen = (innerExprStr.charAt(0) == MARK_BRACE_OPEN) ? 1 : 2;
+            int markerLen = (innerExprStr.charAt(0) == parser.MARK_BRACE_OPEN) ? 1 : 2;
             String rawContent = innerExprStr.substring(markerLen, innerExprStr.length() - 1);
             expr = parseDo(rawContent);
         } else if (eat(state, '(')) {
@@ -401,7 +381,7 @@ public class SnelEvaluateParser implements Parser {
         sb.append((char) first); // marker char (# / $ / {)
         state.nextChar();
 
-        if (first != MARK_BRACE_OPEN) {
+        if (first != parser.MARK_BRACE_OPEN) {
             sb.append((char) state.getCurrentChar()); // { char
             state.nextChar();
         }
@@ -412,9 +392,9 @@ public class SnelEvaluateParser implements Parser {
             sb.append(c);
             state.nextChar();
 
-            if (c == MARK_BRACE_OPEN) {
+            if (c == parser.MARK_BRACE_OPEN) {
                 braceCount++;
-            } else if (c == MARK_BRACE_CLOSE) {
+            } else if (c == parser.MARK_BRACE_CLOSE) {
                 braceCount--;
             }
         }
@@ -424,7 +404,8 @@ public class SnelEvaluateParser implements Parser {
 
     /**
      * 处理表达式后的点、方括号和方法调用（支持安全导航）
-     * */
+     *
+     */
     private Expression parsePostfix(ParserState state, Expression expr) {
         while (true) {
             state.skipWhitespace();

@@ -36,19 +36,6 @@ public class SnelParser {
     protected final char MARK_BRACE_OPEN;       // 默认 '{'
     protected final char MARK_BRACE_CLOSE;      // 默认 '}'
 
-    public EvaluateParser forEval() {
-        return evaluateParser;
-    }
-
-    public TemplateParser forTmpl() {
-        return templateParser;
-    }
-
-    public boolean hasMarker(String expr) {
-        return expr.indexOf(MARK_START_EXPRESSION) >= 0 ||
-                expr.indexOf(MARK_START_PROPERTIES) >= 0;
-    }
-
     public SnelParser(int cahceCapacity) {
         this(cahceCapacity, '#', '$');
     }
@@ -67,5 +54,29 @@ public class SnelParser {
         //后
         this.evaluateParser = new EvaluateParser(this, cahceCapacity);
         this.templateParser = new TemplateParser(this, cahceCapacity);
+    }
+
+    /// /////////////////
+
+    /**
+     * 求值表达式解析器
+     */
+    public EvaluateParser forEval() {
+        return evaluateParser;
+    }
+
+    /**
+     * 模板表达式解析器
+     */
+    public TemplateParser forTmpl() {
+        return templateParser;
+    }
+
+    /**
+     * 是否有占位符
+     */
+    public boolean hasMarker(String expr) {
+        return expr.indexOf(MARK_START_EXPRESSION) >= 0 ||
+                expr.indexOf(MARK_START_PROPERTIES) >= 0;
     }
 }

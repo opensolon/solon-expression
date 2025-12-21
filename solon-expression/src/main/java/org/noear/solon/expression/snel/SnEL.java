@@ -32,7 +32,7 @@ public interface SnEL {
      * 解析（将文本解析为一个可评估的表达式结构树，可反向转换）
      */
     static Expression parse(String expr, boolean cached) {
-        return SnelEvaluateParser.getInstance().parse(expr, cached);
+        return SnelParser.getInstance().forEval().parse(expr, cached);
     }
 
     static Expression parse(String expr) {
@@ -101,7 +101,7 @@ public interface SnEL {
      * 解析模板
      */
     static Expression<String> parseTmpl(String expr, boolean cached) {
-        return SnelTemplateParser.getInstance().parse(expr, cached);
+        return SnelParser.getInstance().forTmpl().parse(expr, cached);
     }
 
     static Expression<String> parseTmpl(String expr) {
@@ -119,7 +119,7 @@ public interface SnEL {
      * @param cached  是否带编译缓存
      */
     static String evalTmpl(String expr, Function context, boolean cached) {
-        if (SnelTemplateParser.getInstance().hasMarker(expr) == false) {
+        if (SnelParser.getInstance().hasMarker(expr) == false) {
             //优化非模板性能
             return expr;
         }

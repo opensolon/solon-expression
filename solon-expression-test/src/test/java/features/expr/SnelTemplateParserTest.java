@@ -4,7 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.expression.Expression;
-import org.noear.solon.expression.snel.SnelTemplateParser;
+import org.noear.solon.expression.snel.SnelParser;
+import org.noear.solon.expression.snel.TemplateParser;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,19 +18,19 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class SnelTemplateParserTest {
 
-    private SnelTemplateParser parser;
+    private SnelParser parser;
 
     @BeforeEach
     void setUp() {
         // 初始化解析器：容量1000, 起始符'#', 属性符'$'
-        parser = new SnelTemplateParser(1000, '#', '{');
+        parser = new SnelParser(1000, '#', '{');
     }
 
     @Test
     @DisplayName("基础文本解析：不包含任何标记")
     void testPureText() {
         String text = "Hello World";
-        Expression<String> expr = parser.parse(text, true);
+        Expression<String> expr = parser.forTmpl().parse(text, true);
 
         assertEquals(text, expr.eval(Collections.emptyMap()));
     }
@@ -41,7 +42,7 @@ public class SnelTemplateParserTest {
         Map<String, Object> context = new HashMap<>();
         context.put("name", "Solon");
 
-        Expression<String> expr = parser.parse(template, true);
+        Expression<String> expr = parser.forTmpl().parse(template, true);
         assertEquals("Welcome, Solon!", expr.eval(context));
     }
 
@@ -50,7 +51,7 @@ public class SnelTemplateParserTest {
     void testBasicExpression() {
         // 注意：具体的表达式执行取决于渲染层实现，这里假设渲染层会处理内容
         String template = "Result is #{1 + 1}";
-        Expression<String> expr = parser.parse(template, true);
+        Expression<String> expr = parser.forTmpl().parse(template, true);
 
         // 验证解析不报错
         assertNotNull(expr);
@@ -67,7 +68,7 @@ public class SnelTemplateParserTest {
         context.put("user", user);
         context.put("user.name", "noear");
 
-        Expression<String> expr = parser.parse(template, true);
+        Expression<String> expr = parser.forTmpl().parse(template, true);
         String result = expr.eval(context);
 
         assertTrue(result.contains("1001"));
@@ -82,7 +83,7 @@ public class SnelTemplateParserTest {
         Map<String, Object> context = new HashMap<>();
         context.put("prefix", "user");
 
-        Expression<String> expr = parser.parse(template, true);
+        Expression<String> expr = parser.forTmpl().parse(template, true);
         assertNotNull(expr);
         // 这里验证的是解析过程没有截断，完整的内容 "${prefix}.name" 被识别为 EXPRESSION 内部内容
     }
@@ -91,7 +92,7 @@ public class SnelTemplateParserTest {
     @DisplayName("边缘情况：未闭合的标记")
     void testUnclosedMarker() {
         String template = "This is #{unclosed";
-        Expression<String> expr = parser.parse(template, false);
+        Expression<String> expr = parser.forTmpl().parse(template, false);
 
         // 根据代码逻辑，未闭合的表达式会回退为普通文本
         assertEquals(template, expr.eval(new HashMap()));
@@ -101,7 +102,7 @@ public class SnelTemplateParserTest {
     @DisplayName("边缘情况：空表达式")
     void testEmptyExpression() {
         String template = "Empty {}";
-        Expression<String> expr = parser.parse(template, true);
+        Expression<String> expr = parser.forTmpl().parse(template, true);
 
         assertNotNull(expr);
         // 应该能正常解析出片段
@@ -113,14 +114,14 @@ public class SnelTemplateParserTest {
         String template = "cached_{val}";
 
         // 第一次解析
-        Expression<String> expr1 = parser.parse(template, true);
+        Expression<String> expr1 = parser.forTmpl().parse(template, true);
         // 第二次解析（命中缓存）
-        Expression<String> expr2 = parser.parse(template, true);
+        Expression<String> expr2 = parser.forTmpl().parse(template, true);
 
         assertSame(expr1, expr2, "开启缓存时，相同表达式应返回同一实例");
 
         // 不使用缓存
-        Expression<String> expr3 = parser.parse(template, false);
+        Expression<String> expr3 = parser.forTmpl().parse(template, false);
         assertNotSame(expr1, expr3, "禁用缓存时，应生成新实例");
     }
 
@@ -136,7 +137,7 @@ public class SnelTemplateParserTest {
     @DisplayName("单双字符混合解析：同时支持 #{expr} 和 {prop}")
     void testHybridLength() {
         // 设置：# 为表达式前缀，{ 为属性前缀（即单字符标记）
-        SnelTemplateParser parser = new SnelTemplateParser(100, '#', '{', '{', '}');
+        TemplateParser parser = new SnelParser(100, '#', '{', '{', '}').forTmpl();
 
         String template = "Exp:#{1+1}, Prop:{user}";
         Expression<String> expr = parser.parse(template, true);
@@ -152,7 +153,7 @@ public class SnelTemplateParserTest {
     @Test
     @DisplayName("边界测试：字符串末尾的单标记")
     void testEndWithMarker() {
-        SnelTemplateParser parser = new SnelTemplateParser(100, '#', '{', '{', '}');
+        TemplateParser parser = new SnelParser(100, '#', '{', '{', '}').forTmpl();
         String template = "Trailing {";
         Expression<String> expr = parser.parse(template, false);
 
@@ -162,21 +163,21 @@ public class SnelTemplateParserTest {
     @Test
     @DisplayName("测试双字符标记 (标准模式)")
     void testStandardMarkers() {
-        SnelTemplateParser parser = new SnelTemplateParser(100, '#', '$'); // #{...} and ${...}
+        SnelParser parser = new SnelParser(100, '#', '$'); // #{...} and ${...}
         String input = "A #{exp} B ${prop}";
 
         // 验证 hasMarker
         assertTrue(parser.hasMarker(input));
 
         // 解析验证
-        assertNotNull(parser.parse(input, true));
+        assertNotNull(parser.forTmpl().parse(input, true));
     }
 
     @Test
     @DisplayName("测试单字符标记兼容性 ({prop})")
     void testSingleCharMarker() {
         // 配置：'#' 为表达式前缀(双字符)，'{' 为属性前缀(单字符)
-        SnelTemplateParser parser = new SnelTemplateParser(100, '#', '{', '{', '}');
+        TemplateParser parser = new SnelParser(100, '#', '{', '{', '}').forTmpl();
         String input = "Hi {name}, calc #{1+1}";
 
         Expression<String> expr = parser.parse(input, false);
@@ -187,7 +188,7 @@ public class SnelTemplateParserTest {
     @Test
     @DisplayName("测试未闭合回退 (单/双字符回退)")
     void testUnclosedRollback() {
-        SnelTemplateParser parser = new SnelTemplateParser(100, '#', '{', '{', '}');
+        TemplateParser parser = new SnelParser(100, '#', '{', '{', '}').forTmpl();
 
         // 测试双字符未闭合回退
         assertEquals("A #{exp", parser.parse("A #{exp", false).eval(new HashMap()));
@@ -199,7 +200,7 @@ public class SnelTemplateParserTest {
     @Test
     @DisplayName("测试嵌套括号平衡")
     void testNestedBraces() {
-        SnelTemplateParser parser = SnelTemplateParser.getInstance();
+        TemplateParser parser = SnelParser.getInstance().forTmpl();
         String input = "Result: #{ map.get('{') }";
 
         // 内部的 '{' 不应导致解析提前结束

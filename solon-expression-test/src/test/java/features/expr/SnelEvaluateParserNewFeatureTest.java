@@ -5,7 +5,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.expression.Expression;
 import org.noear.solon.expression.exception.CompilationException;
-import org.noear.solon.expression.snel.SnelEvaluateParser;
+import org.noear.solon.expression.snel.EvaluateParser;
+import org.noear.solon.expression.snel.SnelParser;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class SnelEvaluateParserNewFeatureTest {
     @Test
     @DisplayName("标识符判定：应当排除 $ 符号")
     public void testIdentifierExcludesDollar() {
-        SnelEvaluateParser parser = SnelEvaluateParser.getInstance();
+        EvaluateParser parser = SnelParser.getInstance().forEval();
         Map<String, Object> context = new HashMap<>();
         context.put("$name", "solon");
         context.put("name", "noear");
@@ -36,7 +37,7 @@ public class SnelEvaluateParserNewFeatureTest {
     @Test
     @DisplayName("包装解析：验证 #{} 的自动剥离与递归")
     public void testFullMarkerRecursive() {
-        SnelEvaluateParser parser = SnelEvaluateParser.getInstance();
+        EvaluateParser parser = SnelParser.getInstance().forEval();
         Map<String, Object> context = new HashMap<>();
         context.put("a", 1);
 
@@ -56,7 +57,7 @@ public class SnelEvaluateParserNewFeatureTest {
     @DisplayName("配置化：验证自定义属性表达式标记")
     public void testCustomPropertyMarker() {
         // 将属性标记改为 '%'，即使用 %{...}
-        SnelEvaluateParser customParser = new SnelEvaluateParser(100, '#', '%');
+        EvaluateParser customParser = new SnelParser(100, '#', '%').forEval();
 
         // 场景 A: 原有的 ${} 在此解析器中应失效（被视为非法标识符起始）
         Assertions.assertThrows(CompilationException.class, () -> {
@@ -74,7 +75,7 @@ public class SnelEvaluateParserNewFeatureTest {
     @DisplayName("配置化：验证自定义属性表达式标记")
     public void testCustomPropertyMarker2() {
         // 将属性标记改为 '%'，即使用 %{...}
-        SnelEvaluateParser customParser = new SnelEvaluateParser(100, '#', '{');
+        EvaluateParser customParser = new SnelParser(100, '#', '{').forEval();
 
         customParser.parse("{test}", false);
 
@@ -90,7 +91,7 @@ public class SnelEvaluateParserNewFeatureTest {
     @DisplayName("配置化：验证自定义表达式包装标记")
     public void testCustomExpressionMarker() {
         // 将包装标记改为 '@'，且改为方括号 '@[' ']'
-        SnelEvaluateParser customParser = new SnelEvaluateParser(100, '@', '$', '[', ']');
+        EvaluateParser customParser = new SnelParser(100, '@', '$', '[', ']').forEval();
         Map<String, Object> context = new HashMap<>();
         context.put("x", 10);
 

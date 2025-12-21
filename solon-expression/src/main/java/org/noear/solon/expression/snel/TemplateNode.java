@@ -24,14 +24,18 @@ import java.util.Properties;
 import java.util.function.Function;
 
 /**
+ * 模板节点
+ *
  * @author noear
  * @since 3.1
  */
 public class TemplateNode implements Expression<String> {
+    private final SnelParser parser;
     private final List<TemplateFragment> fragments;
     private TemplateFragment constantFragment;
 
-    public TemplateNode(List<TemplateFragment> fragments) {
+    public TemplateNode(SnelParser parser, List<TemplateFragment> fragments) {
+        this.parser = parser;
         this.fragments = fragments;
 
         if (fragments.size() == 1 && fragments.get(0).getMarker() == TemplateMarker.TEXT) {
@@ -77,7 +81,7 @@ public class TemplateNode implements Expression<String> {
                 } else {
                     return value;
                 }
-            }else {
+            } else {
                 return constantFragment.getContent();
             }
         } else {
@@ -102,7 +106,7 @@ public class TemplateNode implements Expression<String> {
                     if (fragment.getMarker() == TemplateMarker.PROPERTIES) {
                         value = evalProps(fragment, propsObject, allowPropertyDefault, allowPropertyNesting, context, result);
                     } else {
-                        value = SnEL.eval(fragment.getContent(), context);
+                        value = parser.forEval().parse(fragment.getContent()).eval(context);
                         result.append(value);
                     }
 
@@ -121,7 +125,7 @@ public class TemplateNode implements Expression<String> {
 
         if (value != null && allowPropertyNesting) {
             //模板里可能会（动态）再套模型
-            value = SnEL.evalTmpl((String) value, context);
+            value = parser.forTmpl().parse(value).eval(context);
         }
 
         if (value != null && result != null) {

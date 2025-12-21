@@ -37,7 +37,7 @@ import java.util.Map;
  */
 public class SnelTemplateParser implements Parser<String> {
     private static final SnelTemplateParser INSTANCE = new SnelTemplateParser(2000);
-    private final Map<String, Expression<String>> exprCached;
+    private final LRUCache<String, Expression<String>> exprCached;
 
     public SnelTemplateParser(int cahceCapacity) {
         this(cahceCapacity, '#', '$');
@@ -48,7 +48,7 @@ public class SnelTemplateParser implements Parser<String> {
     }
 
     public SnelTemplateParser(int cahceCapacity, char expreStartMark, char propsStartMark, char braceOpenMark, char braceCloseMark) {
-        exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
+        exprCached = new LRUCache<>(cahceCapacity);
 
         MARK_START_EXPRESSION = expreStartMark;
         MARK_START_PROPERTIES = propsStartMark;

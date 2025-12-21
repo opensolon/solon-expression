@@ -49,14 +49,14 @@ import org.noear.solon.expression.util.LRUCache;
  * */
 public class SnelEvaluateParser implements Parser {
     private static final SnelEvaluateParser INSTANCE = new SnelEvaluateParser(2000);
-    private final Map<String, Expression> exprCached;
+    private final LRUCache<String, Expression> exprCached;
 
     public static SnelEvaluateParser getInstance() {
         return INSTANCE;
     }
 
     public SnelEvaluateParser(int cahceCapacity) {
-        this.exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
+        this.exprCached = new LRUCache<>(cahceCapacity);
     }
 
     @Override

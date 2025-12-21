@@ -44,6 +44,7 @@ import org.noear.solon.expression.util.LRUCache;
  *
  * @author noear
  * @since 3.1
+ * @since 3.8
  * */
 public class SnelEvaluateParser implements Parser {
     private static final SnelEvaluateParser INSTANCE = new SnelEvaluateParser(10000);

@@ -40,16 +40,30 @@ public class SnelTemplateParser implements Parser<String> {
     private final Map<String, Expression<String>> exprCached;
 
     public SnelTemplateParser(int cahceCapacity) {
-        exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
+        this(cahceCapacity, '#', '$');
     }
 
-    public static final char MARK_START_EXPRESSION = '#';
-    public static final char MARK_START_PROPERTIES = '$';
-    private static final char MARK_BRACE_OPEN = '{';
-    private static final char MARK_BRACE_CLOSE = '}';
+    public SnelTemplateParser(int cahceCapacity, char expreStartMark, char propsStartMark) {
+        exprCached = Collections.synchronizedMap(new LRUCache<>(cahceCapacity));
+
+        MARK_START_EXPRESSION = expreStartMark;
+        MARK_START_PROPERTIES = propsStartMark;
+        MARK_BRACE_OPEN = '{';
+        MARK_BRACE_CLOSE = '}';
+    }
+
+    private final char MARK_START_EXPRESSION;
+    private final char MARK_START_PROPERTIES;
+    private final char MARK_BRACE_OPEN;
+    private final char MARK_BRACE_CLOSE;
 
     public static SnelTemplateParser getInstance() {
         return INSTANCE;
+    }
+
+    public boolean hasMarker(String expr) {
+        return expr.indexOf(MARK_START_EXPRESSION) >= 0 ||
+                expr.indexOf(MARK_START_PROPERTIES) >= 0;
     }
 
     @Override
@@ -110,10 +124,18 @@ public class SnelTemplateParser implements Parser<String> {
     private int findExpressionStart(String s, int start) {
         for (int i = start; i < s.length() - 1; i++) {
             char c = s.charAt(i);
-            if ((c == MARK_START_EXPRESSION || c == MARK_START_PROPERTIES) && s.charAt(i + 1) == MARK_BRACE_OPEN) {
+
+            if (c != MARK_START_EXPRESSION && c != MARK_START_PROPERTIES) {
+                continue;
+            }
+
+            if (MARK_START_EXPRESSION == MARK_BRACE_OPEN) {
+                return i - 1;
+            } else if (s.charAt(i + 1) == MARK_BRACE_OPEN) {
                 return i;
             }
         }
+
         return -1;
     }
 
@@ -131,6 +153,7 @@ public class SnelTemplateParser implements Parser<String> {
                 }
             }
         }
+
         return -1; // 未找到匹配的结束括号
     }
 }

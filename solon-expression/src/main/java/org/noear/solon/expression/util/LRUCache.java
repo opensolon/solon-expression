@@ -17,6 +17,8 @@ package org.noear.solon.expression.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReferenceArray;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
@@ -35,14 +37,15 @@ public class LRUCache<K, V> {
 
     private static final int READ_BUFF_SIZE = 64;
     private static final int READ_BUFF_MASK = READ_BUFF_SIZE - 1;
-    private final Node<K, V>[] readBuffer = new Node[READ_BUFF_SIZE];
+
+    private final AtomicReferenceArray<Node<K, V>> readBuffer = new AtomicReferenceArray<>(READ_BUFF_SIZE);
     private final AtomicInteger readBufferIndex = new AtomicInteger(0);
 
-    private final AtomicInteger sizeCounter = new AtomicInteger(0);
+    private final LongAdder sizeCounter = new LongAdder();
 
     public LRUCache(int capacity) {
         this.capacity = capacity;
-        // 按照 0.75 负载因子预设初始大小，避免扩容
+        // 按照 0.75 负载因子预设初始大小，避免扩容带来的性能抖动
         this.data = new ConcurrentHashMap<>((int) (capacity / 0.75f) + 1);
         this.accessOrder = new NodeList<>();
     }
@@ -61,12 +64,16 @@ public class LRUCache<K, V> {
         Node<K, V> oldNode = data.put(key, newNode);
 
         if (oldNode == null) {
-            sizeCounter.incrementAndGet();
+            sizeCounter.increment();
+        } else {
+            // 标记旧节点失效，使其在后续 drain 或已在链表中的位置被跳过
+            oldNode.retired = true;
         }
 
+        // 写操作必须确保节点进入 accessOrder，否则该节点将永远无法被淘汰
         evictionLock.lock();
         try {
-            drainReadBuffer();
+            drainBuffers();
             accessOrder.makeTail(newNode);
             evict();
         } finally {
@@ -75,23 +82,16 @@ public class LRUCache<K, V> {
     }
 
     public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+        // 利用 CHM 的原子性保证 V 只会被计算一次
         Node<K, V> node = data.computeIfAbsent(key, k -> {
             V val = mappingFunction.apply(k);
             if (val == null) return null;
-            sizeCounter.incrementAndGet();
+            sizeCounter.increment();
             return new Node<>(k, val);
         });
 
         if (node != null) {
-            if (evictionLock.tryLock()) {
-                try {
-                    drainReadBuffer();
-                    accessOrder.makeTail(node);
-                    evict();
-                } finally {
-                    evictionLock.unlock();
-                }
-            }
+            recordAccess(node);
             return node.value;
         }
         return null;
@@ -100,7 +100,10 @@ public class LRUCache<K, V> {
     public void remove(K key) {
         Node<K, V> node = data.remove(key);
         if (node != null) {
-            sizeCounter.decrementAndGet();
+            node.retired = true;
+            sizeCounter.decrement();
+
+            // 尝试从链表中物理移除以加速 GC
             if (evictionLock.tryLock()) {
                 try {
                     accessOrder.remove(node);
@@ -112,44 +115,45 @@ public class LRUCache<K, V> {
     }
 
     private void recordAccess(Node<K, V> node) {
-        // 利用原子自增和掩码实现无锁入队
         int idx = readBufferIndex.getAndIncrement() & READ_BUFF_MASK;
-        readBuffer[idx] = node;
 
-        // 当索引回到 0 时（满一轮），尝试触发异步处理
+        // 如果该槽位为空，存入当前节点。若不为空，说明 buffer 忙，放弃本次更新（LRU 允许微小偏差）
+        readBuffer.compareAndSet(idx, null, node);
+
         if (idx == 0) {
-            if (evictionLock.tryLock()) {
-                try {
-                    drainReadBuffer();
-                    evict();
-                } finally {
-                    evictionLock.unlock();
-                }
+            tryDrain();
+        }
+    }
+
+    private void tryDrain() {
+        if (evictionLock.tryLock()) {
+            try {
+                drainBuffers();
+                evict();
+            } finally {
+                evictionLock.unlock();
             }
         }
     }
 
-    private void drainReadBuffer() {
-        // 这里的处理逻辑是：批量将 buffer 中的节点移到链表尾部
+    private void drainBuffers() {
         for (int i = 0; i < READ_BUFF_SIZE; i++) {
-            Node<K, V> node = readBuffer[i];
-            if (node != null) {
-                readBuffer[i] = null; // 显式清空，防止内存泄漏
-                // 检查节点是否依然有效（未被删除）
-                if (data.containsKey(node.key)) {
-                    accessOrder.makeTail(node);
-                }
+            // 原子性取出并重置为 null，确保每个节点只被处理一次
+            Node<K, V> node = readBuffer.getAndSet(i, null);
+            if (node != null && !node.retired) {
+                accessOrder.makeTail(node);
             }
         }
     }
 
     private void evict() {
-        int currentSize = sizeCounter.get();
-        while (currentSize > capacity) {
+        // 虽然 sum() 相对 AtomicInteger.get() 慢，但在锁保护下且仅淘汰时调用，性能可控
+        while (sizeCounter.sum() > capacity) {
             Node<K, V> oldest = accessOrder.removeHead();
             if (oldest != null) {
-                if (data.remove(oldest.key) != null) {
-                    currentSize = sizeCounter.decrementAndGet();
+                // 使用 key + value(oldest) 双重检查删除，防止删错正在并发插入的新节点
+                if (data.remove(oldest.key, oldest)) {
+                    sizeCounter.decrement();
                 }
             } else {
                 break;
@@ -157,25 +161,32 @@ public class LRUCache<K, V> {
         }
     }
 
-    public int size() { return sizeCounter.get(); }
+    public int size() {
+        return sizeCounter.intValue();
+    }
 
     public void clear() {
         evictionLock.lock();
         try {
             data.clear();
-            for (int i = 0; i < READ_BUFF_SIZE; i++) readBuffer[i] = null;
+            for (int i = 0; i < READ_BUFF_SIZE; i++) {
+                readBuffer.set(i, null);
+            }
             accessOrder.clear();
-            sizeCounter.set(0);
+            sizeCounter.reset();
         } finally {
             evictionLock.unlock();
         }
     }
 
-    // --- 内部结构 ---
+    // --- 内部数据结构 ---
 
     private static class Node<K, V> {
         final K key;
         final V value;
+        // 关键：避免已移除节点常驻 Buffer 导致的内存泄漏
+        volatile boolean retired = false;
+
         Node<K, V> prev, next;
 
         Node(K key, V value) {
@@ -188,12 +199,19 @@ public class LRUCache<K, V> {
         private Node<K, V> head, tail;
 
         void makeTail(Node<K, V> node) {
-            if (node == tail) return;
+            if (node == tail || node.retired) {
+                return;
+            }
+
+            // 如果节点已在链表中，先将其剥离
             if (node.prev != null || node.next != null || node == head) {
                 if (node.prev != null) node.prev.next = node.next;
                 if (node.next != null) node.next.prev = node.prev;
                 if (node == head) head = node.next;
+                if (node == tail) tail = node.prev;
             }
+
+            // 移到末尾
             node.prev = tail;
             node.next = null;
             if (tail == null) {
@@ -205,11 +223,16 @@ public class LRUCache<K, V> {
         }
 
         Node<K, V> removeHead() {
-            if (head == null) return null;
+            if (head == null) {
+                return null;
+            }
             Node<K, V> node = head;
             head = head.next;
-            if (head == null) tail = null;
-            else head.prev = null;
+            if (head == null) {
+                tail = null;
+            } else {
+                head.prev = null;
+            }
             node.prev = node.next = null;
             return node;
         }
@@ -222,6 +245,8 @@ public class LRUCache<K, V> {
             node.prev = node.next = null;
         }
 
-        void clear() { head = tail = null; }
+        void clear() {
+            head = tail = null;
+        }
     }
 }

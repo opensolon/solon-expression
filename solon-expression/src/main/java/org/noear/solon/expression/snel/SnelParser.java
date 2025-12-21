@@ -22,7 +22,7 @@ package org.noear.solon.expression.snel;
  * @since 3.8
  */
 public class SnelParser {
-    private static final SnelParser instance = new SnelParser(10000);
+    private static final SnelParser instance = new SnelParser(2048);
 
     public static SnelParser getInstance() {
         return instance;

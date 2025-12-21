@@ -160,7 +160,7 @@ public class LRUCache<K, V> {
     private static class Node<K, V> {
         final K key; final V value;
         volatile boolean retired = false;
-        Node<K, V> prev, next;
+        volatile Node<K, V> prev, next;
         Node(K key, V value) { this.key = key; this.value = value; }
     }
 

@@ -1,4 +1,19 @@
 
+### v3.9.6
+
+* 添加 `solon-expression` 添加 `@bean` 表达式支持
+
+示例：
+
+```java
+Map<String, Object> vars = new HashMap();
+vars.put("a", 1);
+
+EnhanceContext context = new EnhanceContext(vars);
+context.forBeans(Solon.context()::getBean);
+
+SnEL.eval("@user.getAge() == 20 ? true : false", context);
+```
 
 ### v3.8.0
 

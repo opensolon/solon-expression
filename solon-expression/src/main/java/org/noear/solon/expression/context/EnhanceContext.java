@@ -16,10 +16,7 @@
 package org.noear.solon.expression.context;
 
 import org.noear.solon.expression.exception.EvaluationException;
-import org.noear.solon.expression.guidance.PropertiesGuidance;
-import org.noear.solon.expression.guidance.ReturnGuidance;
-import org.noear.solon.expression.guidance.TypeGuidance;
-import org.noear.solon.expression.guidance.TypeGuidanceUnsafety;
+import org.noear.solon.expression.guidance.*;
 import org.noear.solon.expression.snel.PropertyHolder;
 import org.noear.solon.expression.snel.ReflectionUtil;
 
@@ -34,12 +31,13 @@ import java.util.function.Function;
  * @since 3.2
  * @since 3.6
  */
-public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance {
+public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implements Function<String, Object>, TypeGuidance, PropertiesGuidance, ReturnGuidance , BeanGuidance {
     protected final T target;
     protected final boolean isMap;
 
     private TypeGuidance typeGuidance = TypeGuidanceUnsafety.INSTANCE;
     private Properties properties;
+    private Function<String, Object> beans;
 
     private boolean allowPropertyDefault = true;
     private boolean allowPropertyNesting = false;
@@ -49,6 +47,11 @@ public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implem
     public EnhanceContext(T target) {
         this.target = target;
         this.isMap = target instanceof Map;
+    }
+
+    public Slf forBeans(Function<String, Object> beans) {
+        this.beans = beans;
+        return (Slf) this;
     }
 
     public Slf forProperties(Properties properties) {
@@ -140,6 +143,15 @@ public class EnhanceContext<T extends Object, Slf extends EnhanceContext> implem
     @Override
     public Properties getProperties() {
         return properties;
+    }
+
+    @Override
+    public Object getBean(String name) {
+        if (beans == null) {
+            return null;
+        } else {
+            return beans.apply(name);
+        }
     }
 
     @Override

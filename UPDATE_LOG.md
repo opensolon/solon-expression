@@ -12,7 +12,7 @@ vars.put("a", 1);
 EnhanceContext context = new EnhanceContext(vars);
 context.forBeans(Solon.context()::getBean);
 
-SnEL.eval("@user.getAge() == 20 ? true : false", context);
+SnEL.eval("@user.getAge() == a ? true : false", context);
 ```
 
 ### v3.8.0

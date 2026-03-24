@@ -321,10 +321,13 @@ public class EvaluateParser implements Parser {
         state.skipWhitespace();
         Expression expr;
 
-        if (eat(state, '@')){
+        if (eat(state, '#')){
+            String beanName = parseIdentifier(state);
+            expr = new VariableNode(beanName);
+        } else if (eat(state, '@')){
             String beanName = parseIdentifier(state);
             expr = new BeanNode(beanName);
-        }else  if (eat(state, "T(")) {
+        } else  if (eat(state, "T(")) {
             // 检查是否是 T(...) 类型表达式
             String className = parseClassName(state);
             require(state, ')', "Expected ')' after class name in T(...) expression");

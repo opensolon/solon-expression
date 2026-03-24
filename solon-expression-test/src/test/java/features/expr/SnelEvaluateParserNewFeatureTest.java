@@ -79,9 +79,11 @@ public class SnelEvaluateParserNewFeatureTest {
 
         customParser.parse("{test}", false);
 
-        // 场景 B: 新的 %{} 应当被识别为 PropertyNode (TemplateNode)
-        // 只要不报错，说明 isPropertyStart 逻辑生效
         Assertions.assertDoesNotThrow(() -> {
+            customParser.parse("{app.name}", false);
+        });
+
+        Assertions.assertThrows(Throwable.class, () -> {
             customParser.parse("%{app.name}", false);
         });
     }

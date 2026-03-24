@@ -1,8 +1,10 @@
 package features.expr.issues;
 
 import lombok.Data;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.noear.solon.expression.context.EnhanceContext;
+import org.noear.solon.expression.exception.CompilationException;
 import org.noear.solon.expression.snel.SnEL;
 
 import java.io.Serializable;
@@ -47,7 +49,13 @@ public class Issue_IHPAQ3 {
         EnhanceContext context = new EnhanceContext(vars);
         context.forBeans(beans::get);
 
-        System.out.println(SnEL.eval("@user.bb($uuu)", context));
+        Assertions.assertThrows(CompilationException.class, () -> {
+            SnEL.eval("@user.bb($uuu)", context);
+        });
+
+        Assertions.assertThrows(CompilationException.class, () -> {
+            SnEL.eval("@user.bb(%uuu)", context);
+        });
     }
 
 

@@ -1,4 +1,27 @@
 
+### v3.10.1
+
+* 修复 solon-expression 表达式遇到非法特殊符可能会 oom 的问题（重要）
+
+
+### v3.10.0
+
+* 添加 `solon-expression` 添加 `@bean` 表达式支持
+
+示例：
+
+```java
+Map<String, Object> vars = new HashMap();
+vars.put("a", 1);
+
+EnhanceContext context = new EnhanceContext(vars);
+context.forBeans(Solon.context()::getBean);
+
+SnEL.eval("@user.getAge() == a ? true : false", context);
+```
+
+
+
 ### v3.9.6
 
 * 添加 `solon-expression` 添加 `@bean` 表达式支持

@@ -172,8 +172,15 @@ public class EvaluateParser implements Parser {
      * 检查是否是包装表达式起始
      */
     private boolean isExpressionStart(ParserState state) {
-        return (state.getCurrentChar() == parser.MARK_START_EXPRESSION && state.peekNextChar() == parser.MARK_BRACE_OPEN)
-                || state.getCurrentChar() == parser.MARK_BRACE_OPEN;
+        int cur = state.getCurrentChar();
+        int next = state.peekNextChar();
+
+        // 只有明确看到 #{ 或 { 才认为是包装表达式的开始
+        if (cur == parser.MARK_START_EXPRESSION) {
+            return next == parser.MARK_BRACE_OPEN;
+        }
+
+        return cur == parser.MARK_BRACE_OPEN;
     }
 
     /**
@@ -360,7 +367,12 @@ public class EvaluateParser implements Parser {
             expr = new ConstantNode(null);
         } else {
             String identifier = parseIdentifier(state);
-            expr = new VariableNode(identifier);
+
+            if(identifier != null && identifier.length() > 0) {
+                expr = new VariableNode(identifier);
+            } else {
+                throw state.error("Expression is invalid");
+            }
         }
 
         return parsePostfix(state, expr);
@@ -738,6 +750,11 @@ public class EvaluateParser implements Parser {
             } else {
                 return -1;
             }
+        }
+
+        public CompilationException error(String message) {
+            String charDesc = (ch == -1) ? "EOF" : "'" + (char) ch + "'";
+            return new CompilationException(message + " (found " + charDesc + ") at position " + position);
         }
 
         /**

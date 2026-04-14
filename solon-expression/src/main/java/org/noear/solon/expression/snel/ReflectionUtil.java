@@ -268,14 +268,14 @@ public class ReflectionUtil {
             MethodKey methodKey = (MethodKey) o;
             return clazz.equals(methodKey.clazz) &&
                     methodName.equals(methodKey.methodName) &&
-                    java.util.Arrays.equals(argTypes, methodKey.argTypes);
+                    Arrays.equals(argTypes, methodKey.argTypes);
         }
 
         @Override
         public int hashCode() {
             int result = clazz.hashCode();
             result = 31 * result + methodName.hashCode();
-            result = 31 * result + java.util.Arrays.hashCode(argTypes);
+            result = 31 * result + Arrays.hashCode(argTypes);
             return result;
         }
     }

@@ -1,4 +1,8 @@
 
+### v3.9.7
+
+* 修复 solon-expression 表达式遇到非法特殊符可能会 oom 的问题（重要）
+
 ### v3.9.6
 
 * 添加 `solon-expression` 添加 `@bean` 表达式支持

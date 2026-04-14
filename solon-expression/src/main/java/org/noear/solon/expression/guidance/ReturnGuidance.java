@@ -21,7 +21,7 @@ package org.noear.solon.expression.guidance;
  * @author noear
  * @since 3.6
  */
-public interface ReturnGuidance {
+public interface ReturnGuidance extends Guidance{
     /**
      * 允许返回 null
      */

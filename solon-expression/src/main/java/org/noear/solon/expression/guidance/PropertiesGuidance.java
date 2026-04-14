@@ -23,7 +23,7 @@ import java.util.Properties;
  * @author noear
  * @since 3.6
  */
-public interface PropertiesGuidance {
+public interface PropertiesGuidance extends Guidance {
     /**
      * 获取属性
      */

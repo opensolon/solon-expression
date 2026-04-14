@@ -15,17 +15,12 @@
  */
 package org.noear.solon.expression.guidance;
 
-import org.noear.solon.expression.exception.EvaluationException;
-
 /**
- * 类型指导
+ * Bean 指导
  *
  * @author noear
- * @since 3.6
+ * @since 3.9.6
  */
-public interface TypeGuidance extends Guidance {
-    /**
-     * 获取类型
-     */
-    Class<?> getType(String typeName) throws EvaluationException;
+public interface BeanGuidance extends Guidance {
+    Object getBean(String name);
 }

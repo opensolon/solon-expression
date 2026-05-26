@@ -1,4 +1,9 @@
 
+
+## v4.0.0
+
+* 移除 StandardContext 类
+
 ### v3.10.1
 
 * 修复 solon-expression 表达式遇到非法特殊符可能会 oom 的问题（重要）

@@ -2,7 +2,7 @@
 
 ## v4.0.0
 
-* 移除 StandardContext 类
+* 移除 solon-expression StandardContext 类
 
 ### v3.10.1
 
